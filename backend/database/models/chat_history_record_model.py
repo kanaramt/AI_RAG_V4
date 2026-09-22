@@ -8,8 +8,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import JSONB
 
-from backend.database.base import Base
-from backend.utils.datetime_utils import ist_now
+from database.base import Base
+from utils.datetime_utils import ist_now
 
 
 class ChatHistoryRecordModel(Base):

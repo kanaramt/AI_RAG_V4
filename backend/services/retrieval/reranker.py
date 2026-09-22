@@ -1,5 +1,5 @@
-from backend.settings import settings
-from backend.schemas.retrieval.retrieved_document import RetrievedDocument
+from settings import settings
+from schemas.retrieval.retrieved_document import RetrievedDocument
 
 
 class Reranker:

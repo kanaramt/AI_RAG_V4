@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from backend.database.models.ingestion_history import (
+from database.models.ingestion_history import (
     IngestionHistoryModel,
 )
 

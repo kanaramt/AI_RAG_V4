@@ -3,7 +3,7 @@ from pathlib import Path
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-from backend.settings import settings
+from settings import settings
 
 router = APIRouter()
 

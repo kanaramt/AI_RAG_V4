@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from backend.utils.datetime_utils import ist_now
+from utils.datetime_utils import ist_now
 from pydantic import BaseModel, Field
 
 

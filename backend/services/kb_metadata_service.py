@@ -1,10 +1,10 @@
 import json
 import os
 import time
-from backend.database.session import SessionLocal
-from backend.services.document_management.document_sql_repository import DocumentSQLRepository
-from backend.engines.generation.generation_engine import GenerationEngine
-from backend.settings import settings
+from database.session import SessionLocal
+from services.document_management.document_sql_repository import DocumentSQLRepository
+from engines.generation.generation_engine import GenerationEngine
+from settings import settings
 
 class KBMetadataService:
     METADATA_FILE = os.path.join(os.path.dirname(__file__), "..", "..", "data", "kb_metadata.json")
@@ -147,3 +147,4 @@ Provide a JSON object with exactly the following fields (nothing else, no format
             print(f"[KBMetadataService] Saved metadata summary to {cls.METADATA_FILE}")
         except Exception as e:
             print(f"[KBMetadataService] Error writing metadata: {e}")
+

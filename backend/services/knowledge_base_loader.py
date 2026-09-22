@@ -2,8 +2,8 @@ import asyncio
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
-from backend.settings import settings
-from backend.engines.ingestion.ingestion_engine import IngestionEngine
+from settings import settings
+from engines.ingestion.ingestion_engine import IngestionEngine
 
 
 class KnowledgeBaseLoader:
@@ -78,7 +78,7 @@ class KnowledgeBaseLoader:
         any files not yet indexed in SQLite memory.
         """
         if memory is None:
-            from backend.memory.memory_service import MemoryService
+            from memory.memory_service import MemoryService
             memory = MemoryService()
 
         # Get existing indexed documents from SQLite memory

@@ -9,7 +9,7 @@ coordinates existing services.
 from pathlib import Path
 from typing import Any
 
-from backend.services.ingestion_service import IngestionService
+from services.ingestion_service import IngestionService
 
 
 class IngestionEngine:

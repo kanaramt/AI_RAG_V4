@@ -1,20 +1,20 @@
-from backend.database.session import (
+from database.session import (
     SessionLocal,
 )
 
-from backend.schemas.knowledge.document_schema import (
+from schemas.knowledge.document_schema import (
     DocumentSchema,
 )
 
-from backend.schemas.knowledge.chunk_schema import (
+from schemas.knowledge.chunk_schema import (
     ChunkSchema,
 )
 
-from backend.services.document_management.document_sql_repository import (
+from services.document_management.document_sql_repository import (
     DocumentSQLRepository,
 )
 
-from backend.services.document_management.chunk_sql_repository import (
+from services.document_management.chunk_sql_repository import (
     ChunkSQLRepository,
 )
 

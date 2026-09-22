@@ -1,5 +1,5 @@
-from backend.schemas.retrieval.retrieved_document import RetrievedDocument
-from backend.services.retrieval.context_compressor import ContextCompressor
+from schemas.retrieval.retrieved_document import RetrievedDocument
+from services.retrieval.context_compressor import ContextCompressor
 
 
 class ContextBuilder:

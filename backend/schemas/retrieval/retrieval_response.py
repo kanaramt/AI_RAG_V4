@@ -1,8 +1,8 @@
 from pydantic import BaseModel, Field
 
-from backend.schemas.retrieval.retrieval_metrics import RetrievalMetrics
-from backend.schemas.retrieval.retrieved_document import RetrievedDocument
-from backend.schemas.retrieval.source_reference import SourceReference
+from schemas.retrieval.retrieval_metrics import RetrievalMetrics
+from schemas.retrieval.retrieved_document import RetrievedDocument
+from schemas.retrieval.source_reference import SourceReference
 
 
 class RetrievalResponse(BaseModel):

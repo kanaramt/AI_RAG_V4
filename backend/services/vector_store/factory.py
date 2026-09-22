@@ -1,6 +1,6 @@
-from backend.settings import settings
+from settings import settings
 
-from backend.services.vector_store.hybrid_service import HybridVectorStore
+from services.vector_store.hybrid_service import HybridVectorStore
 
 
 class VectorStoreFactory:

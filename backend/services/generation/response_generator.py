@@ -1,6 +1,6 @@
-from backend.services.generation.base_generator import BaseGenerator
-from backend.services.generation.prompt_builder import PromptBuilder
-from backend.services.llm.llm_factory import LLMFactory
+from services.generation.base_generator import BaseGenerator
+from services.generation.prompt_builder import PromptBuilder
+from services.llm.llm_factory import LLMFactory
 
 
 class ResponseGenerator(BaseGenerator):

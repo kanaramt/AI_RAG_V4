@@ -9,13 +9,13 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from backend.database.session import get_db
-from backend.database.models.website_ingestion import CrawledWebsiteModel, WebsiteConfigModel
-from backend.services.website_crawler_service import WebsiteCrawlerService
-from backend.settings import settings
-from backend.services.vector_store.factory import VectorStoreFactory
-from backend.catalog.repositories.asset_sql_repository import AssetSQLRepository
-from backend.catalog.services.asset_service import AssetService
+from database.session import get_db
+from database.models.website_ingestion import CrawledWebsiteModel, WebsiteConfigModel
+from services.website_crawler_service import WebsiteCrawlerService
+from settings import settings
+from services.vector_store.factory import VectorStoreFactory
+from catalog.repositories.asset_sql_repository import AssetSQLRepository
+from catalog.services.asset_service import AssetService
 
 router = APIRouter()
 
@@ -361,3 +361,4 @@ async def save_config(payload: UpdateConfigSchema, db: Session = Depends(get_db)
         cfg.value = val_str
     db.commit()
     return {"status": "success", "allow_user_ingestion": payload.allow_user_ingestion}
+

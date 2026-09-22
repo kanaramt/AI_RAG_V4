@@ -1,19 +1,19 @@
 import uuid
 
-from backend.schemas.evaluation.evaluation_result import (
+from schemas.evaluation.evaluation_result import (
     EvaluationResult,
 )
-from backend.schemas.recommendation.recommendation_result import (
+from schemas.recommendation.recommendation_result import (
     RecommendationResult,
 )
 
-from backend.database.session import SessionLocal
+from database.session import SessionLocal
 
-from backend.services.recommendation.recommendation_sql_repository import (
+from services.recommendation.recommendation_sql_repository import (
     RecommendationSQLRepository,
 )
 
-from backend.services.recommendation.recommendation_analytics import (
+from services.recommendation.recommendation_analytics import (
     RecommendationAnalytics,
 )
 

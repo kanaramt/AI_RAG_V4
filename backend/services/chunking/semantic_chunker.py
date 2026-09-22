@@ -2,13 +2,13 @@ from anthropic.types.beta import beta_managed_agents_agent_tool_config
 from anthropic.types.beta import beta_managed_agents_agent_tool_config
 from anthropic.types.beta import beta_managed_agents_agent_tool_config
 from conda.core import index
-from backend.tests.test_chunk_validator import chunks
-from backend.services.chunking.base_chunker import BaseChunker
-from backend.services.chunking.sentence_splitter import SentenceSplitter
-from backend.services.chunking.similarity import Similarity
-from backend.services.embeddings.embedding_factory import EmbeddingFactory
-from backend.services.chunking.chunk_validator import ChunkValidator
-from backend.models.chunk import Chunk
+from tests.test_chunk_validator import chunks
+from services.chunking.base_chunker import BaseChunker
+from services.chunking.sentence_splitter import SentenceSplitter
+from services.chunking.similarity import Similarity
+from services.embeddings.embedding_factory import EmbeddingFactory
+from services.chunking.chunk_validator import ChunkValidator
+from models.chunk import Chunk
 
 
 class SemanticChunker(BaseChunker):

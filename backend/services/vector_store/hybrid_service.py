@@ -1,6 +1,6 @@
-from backend.services.vector_store.base import BaseVectorStore
-from backend.services.vector_store.qdrant_service import QdrantService
-from backend.services.vector_store.faiss_service import FaissService
+from services.vector_store.base import BaseVectorStore
+from services.vector_store.qdrant_service import QdrantService
+from services.vector_store.faiss_service import FaissService
 
 
 class HybridVectorStore(BaseVectorStore):

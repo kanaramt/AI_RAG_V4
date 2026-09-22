@@ -1,4 +1,4 @@
-from backend.schemas.governance.rbac import (
+from schemas.governance.rbac import (
     Permission,
     RoleAssignment,
     UserRole,

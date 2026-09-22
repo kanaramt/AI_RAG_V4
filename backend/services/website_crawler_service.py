@@ -8,18 +8,18 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
 from urllib.robotparser import RobotFileParser
 from datetime import datetime
-from backend.utils.datetime_utils import ist_now
+from utils.datetime_utils import ist_now
 from uuid import uuid4
 
-from backend.settings import settings
-from backend.database.session import SessionLocal
-from backend.database.models.website_ingestion import CrawledWebsiteModel
-from backend.services.document_chunker import DocumentChunker
-from backend.services.embedding_service import EmbeddingService
-from backend.services.vector_store.factory import VectorStoreFactory
-from backend.catalog.schemas.knowledge_asset import SourceType, AssetStatus
-from backend.catalog.repositories.asset_sql_repository import AssetSQLRepository
-from backend.catalog.services.asset_service import AssetService
+from settings import settings
+from database.session import SessionLocal
+from database.models.website_ingestion import CrawledWebsiteModel
+from services.document_chunker import DocumentChunker
+from services.embedding_service import EmbeddingService
+from services.vector_store.factory import VectorStoreFactory
+from catalog.schemas.knowledge_asset import SourceType, AssetStatus
+from catalog.repositories.asset_sql_repository import AssetSQLRepository
+from catalog.services.asset_service import AssetService
 
 
 class WebsiteCrawlerService:
@@ -754,10 +754,10 @@ class WebsiteCrawlerService:
 
         # 3. Register/Update Knowledge Catalog
         try:
-            from backend.catalog.services.asset_service import AssetService
-            from backend.catalog.repositories.asset_sql_repository import AssetSQLRepository
-            from backend.catalog.schemas.knowledge_asset import AssetStatus
-            from backend.catalog.schemas.knowledge_asset import SourceType
+            from catalog.services.asset_service import AssetService
+            from catalog.repositories.asset_sql_repository import AssetSQLRepository
+            from catalog.schemas.knowledge_asset import AssetStatus
+            from catalog.schemas.knowledge_asset import SourceType
             
             asset_service = AssetService(AssetSQLRepository(db))
             asset = asset_service.repository.get_by_document_id(website_id)
@@ -783,3 +783,4 @@ class WebsiteCrawlerService:
         website.last_crawled_at = ist_now()
         db.commit()
         db.close()
+

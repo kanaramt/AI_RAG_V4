@@ -1,6 +1,6 @@
 import tiktoken
 
-from backend.services.chunking.base_chunker import BaseChunker
+from services.chunking.base_chunker import BaseChunker
 
 
 class TokenChunker(BaseChunker):

@@ -3,7 +3,7 @@ from collections.abc import Generator
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import sessionmaker
 
-from backend.database.database import engine
+from database.database import engine
 
 
 SessionLocal = sessionmaker(

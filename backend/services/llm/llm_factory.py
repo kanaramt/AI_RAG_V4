@@ -1,5 +1,5 @@
-from backend.settings import settings
-from backend.services.llm.ollama_llm import OllamaLLM
+from settings import settings
+from services.llm.ollama_llm import OllamaLLM
 
 
 class LLMFactory:

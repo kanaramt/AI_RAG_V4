@@ -1,6 +1,6 @@
 from pypdf import PdfReader
 
-from backend.services.ingestion.base_loader import BaseLoader
+from services.ingestion.base_loader import BaseLoader
 
 
 class PDFLoader(BaseLoader):

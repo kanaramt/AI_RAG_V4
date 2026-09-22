@@ -1,10 +1,10 @@
 import uuid
 
-from backend.schemas.governance.audit_log import (
+from schemas.governance.audit_log import (
     AuditAction,
     AuditLog,
 )
-from backend.services.governance.audit_repository import (
+from services.governance.audit_repository import (
     AuditRepository,
 )
 

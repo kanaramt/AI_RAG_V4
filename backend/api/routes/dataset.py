@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 
-from backend.services.dataset_service import DatasetService
+from services.dataset_service import DatasetService
 
 router = APIRouter()
 
@@ -67,3 +67,4 @@ async def update_interaction_feedback(payload: FeedbackUpdateSchema):
     if not success:
         raise HTTPException(status_code=404, detail="Interaction record not found.")
     return {"status": "success", "message": f"Updated feedback to {payload.feedback}"}
+

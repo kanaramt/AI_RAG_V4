@@ -21,8 +21,8 @@ their information.
 
 from pathlib import Path
 
-from backend.connectors.base.base_connector import BaseConnector
-from backend.connectors.base.connector_result import ConnectorResult
+from connectors.base.base_connector import BaseConnector
+from connectors.base.connector_result import ConnectorResult
 
 
 class LocalFileConnector(BaseConnector):

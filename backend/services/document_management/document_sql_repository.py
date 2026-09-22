@@ -1,11 +1,11 @@
 
 from sqlalchemy.orm import Session
 
-from backend.database.models.document_model import (
+from database.models.document_model import (
     DocumentModel,
 )
 
-from backend.schemas.knowledge.document_schema import (
+from schemas.knowledge.document_schema import (
     DocumentSchema,
 )
 

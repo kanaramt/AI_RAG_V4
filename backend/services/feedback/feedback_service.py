@@ -2,7 +2,7 @@
 Enterprise Knowledge Feedback Service
 """
 
-from backend.schemas.feedback.knowledge_feedback import (
+from schemas.feedback.knowledge_feedback import (
     KnowledgeFeedback,
 )
 

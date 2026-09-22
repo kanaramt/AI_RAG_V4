@@ -1,4 +1,4 @@
-from backend.schemas.retrieval.retrieved_document import RetrievedDocument
+from schemas.retrieval.retrieved_document import RetrievedDocument
 
 
 class ScoreFusion:

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
-from backend.dependencies import get_memory
-from backend.services.vector_store.factory import VectorStoreFactory
+from dependencies import get_memory
+from services.vector_store.factory import VectorStoreFactory
 
 router = APIRouter()
 

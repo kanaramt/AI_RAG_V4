@@ -2,11 +2,11 @@ import threading
 from functools import lru_cache
 from sqlalchemy.orm import Session
 
-from backend.database.session import get_db
+from database.session import get_db
 
-from backend.settings import settings
-from backend.memory.memory_service import MemoryService
-from backend.engines.retrieval.retrieval_engine import RetrievalEngine
+from settings import settings
+from memory.memory_service import MemoryService
+from engines.retrieval.retrieval_engine import RetrievalEngine
 
 _memory_service = None
 _retrieval_engine = None

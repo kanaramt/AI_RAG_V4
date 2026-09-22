@@ -1,47 +1,47 @@
 from fastapi import APIRouter
 
-from backend.api.routes.chat import router as chat_router, history_router
-from backend.api.routes.documents import router as documents_router
-from backend.api.routes.documents import paste_content, index_url
-from backend.api.routes.health import router as health_router
-from backend.api.routes.feedback import router as feedback_router
-from backend.api.routes.review import router as review_router
-from backend.api.routes.evaluation import router as evaluation_router
-from backend.api.routes.recommendation import router as recommendation_router
-from backend.api.routes.knowledge_health import (
+from api.routes.chat import router as chat_router, history_router
+from api.routes.documents import router as documents_router
+from api.routes.documents import paste_content, index_url
+from api.routes.health import router as health_router
+from api.routes.feedback import router as feedback_router
+from api.routes.review import router as review_router
+from api.routes.evaluation import router as evaluation_router
+from api.routes.recommendation import router as recommendation_router
+from api.routes.knowledge_health import (
     router as knowledge_health_router,
 )
-from backend.api.routes.jobs import (
+from api.routes.jobs import (
     router as jobs_router,
 )
-from backend.api.routes.versioning import (
+from api.routes.versioning import (
     router as versioning_router,
 )
-from backend.api.routes.governance import (
+from api.routes.governance import (
     router as governance_router,
 )
-from backend.api.routes.database import (
+from api.routes.database import (
     router as database_router,
 )
-from backend.catalog.api import (
+from catalog.api import (
     router as catalog_router,
 )
-from backend.api.routes.performance import router as performance_router
-from backend.api.routes.search import router as search_router
-from backend.api.routes.settings import router as settings_router
-from backend.api.routes.dataset import router as dataset_router
-from backend.api.routes.website_ingestion import router as website_router
-from backend.api.routes.document_export import (
+from api.routes.performance import router as performance_router
+from api.routes.search import router as search_router
+from api.routes.settings import router as settings_router
+from api.routes.dataset import router as dataset_router
+from api.routes.website_ingestion import router as website_router
+from api.routes.document_export import (
     router as export_router,
 )
-from backend.api.routes.ingestion_history import (
+from api.routes.ingestion_history import (
     router as ingestion_history_router,
 )
 
-from backend.api.routes.document_catalog import (
+from api.routes.document_catalog import (
     router as document_catalog_router,
 )
-from backend.api.routes.chunk_catalog import (
+from api.routes.chunk_catalog import (
     router as chunk_catalog_router,
 )
 

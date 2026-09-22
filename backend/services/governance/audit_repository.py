@@ -1,4 +1,4 @@
-from backend.schemas.governance.audit_log import (
+from schemas.governance.audit_log import (
     AuditLog,
 )
 

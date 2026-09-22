@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from backend.services.health.knowledge_health_service import (
+from services.health.knowledge_health_service import (
     KnowledgeHealthService,
 )
 

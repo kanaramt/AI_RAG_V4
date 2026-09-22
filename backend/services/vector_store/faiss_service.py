@@ -1,4 +1,4 @@
-from backend.services.vector_store.base import BaseVectorStore
+from services.vector_store.base import BaseVectorStore
 
 
 class FaissService(BaseVectorStore):

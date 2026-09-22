@@ -2,8 +2,8 @@ from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import Float
 from sqlalchemy import String
-from backend.utils.datetime_utils import ist_now
-from backend.database.base import Base
+from utils.datetime_utils import ist_now
+from database.base import Base
 
 
 class KnowledgeReviewModel(Base):

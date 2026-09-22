@@ -1,8 +1,8 @@
-from backend.schemas.retrieval.retrieval_request import RetrievalRequest
-from backend.schemas.retrieval.retrieval_response import RetrievalResponse
+from schemas.retrieval.retrieval_request import RetrievalRequest
+from schemas.retrieval.retrieval_response import RetrievalResponse
 
-from backend.services.retrieval.query_rewriter import QueryRewriter
-from backend.services.retrieval.strategies.hybrid_strategy import HybridStrategy
+from services.retrieval.query_rewriter import QueryRewriter
+from services.retrieval.strategies.hybrid_strategy import HybridStrategy
 
 
 class MultiQueryStrategy:

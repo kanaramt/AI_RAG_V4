@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
 
-from backend.database.models.recommendation_model import (
+from database.models.recommendation_model import (
     RecommendationModel,
 )
-from backend.schemas.recommendation.recommendation_result import (
+from schemas.recommendation.recommendation_result import (
     RecommendationResult,
 )
 

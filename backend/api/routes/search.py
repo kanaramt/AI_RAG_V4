@@ -105,7 +105,7 @@ async def _process_web_search(search_query: str, model_name: str = "llama3", cha
     # 2. Fast LLM Synthesis in Google AI Overview style (No raw URLs in text body)
     synthesis = web_markdown_summary
     try:
-        from backend.llm.factory import LLMFactory
+        from llm.factory import LLMFactory
         llm = LLMFactory.get_llm_by_model(model_name, temperature=0.3)
         prompt_messages = [
             {
@@ -144,7 +144,7 @@ async def _process_web_search(search_query: str, model_name: str = "llama3", cha
     assistant_msg = None
     if chat_id:
         try:
-            from backend.dependencies import get_memory
+            from dependencies import get_memory
             memory = get_memory()
             
             # Ensure conversation exists in memory before adding messages
@@ -206,3 +206,4 @@ async def execute_web_search_get(
     chat_id: str | None = Query(None)
 ):
     return await _process_web_search(search_query=query, model_name=model, chat_id=chat_id)
+

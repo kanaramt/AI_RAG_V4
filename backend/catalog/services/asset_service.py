@@ -2,28 +2,28 @@
 import uuid
 from datetime import datetime
 
-from backend.catalog.repositories.asset_sql_repository import (
+from catalog.repositories.asset_sql_repository import (
     AssetSQLRepository,
 )
 
-from backend.catalog.analytics.asset_analytics import (
+from catalog.analytics.asset_analytics import (
     AssetAnalytics,
 )
-from backend.catalog.repositories.asset_repository import (
+from catalog.repositories.asset_repository import (
     AssetRepository,
 )
-from backend.catalog.repositories.asset_sql_repository import (
+from catalog.repositories.asset_sql_repository import (
     AssetSQLRepository,
 )
-from backend.catalog.schemas.knowledge_asset import (
+from catalog.schemas.knowledge_asset import (
     AssetStatus,
     KnowledgeAsset,
     SourceType,
 )
-from backend.catalog.search.asset_search import (
+from catalog.search.asset_search import (
     AssetSearch,
 )
-from backend.utils.datetime_utils import ist_now
+from utils.datetime_utils import ist_now
 
 class AssetService:
     """

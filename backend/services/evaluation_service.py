@@ -1,7 +1,7 @@
 import re
 import json
 from typing import Tuple
-from backend.llm.factory import LLMFactory
+from llm.factory import LLMFactory
 
 
 async def calculate_rag_metrics(
@@ -94,3 +94,4 @@ async def calculate_rag_metrics(
             print(f"[Evaluation Subagent] LLM judge skipped/failed: {e}")
 
     return round(c_rel, 3), round(faith, 3), round(a_rel, 3)
+

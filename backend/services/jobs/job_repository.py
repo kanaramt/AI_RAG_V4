@@ -1,4 +1,4 @@
-from backend.schemas.jobs.job import Job, JobStatus
+from schemas.jobs.job import Job, JobStatus
 
 
 class JobRepository:

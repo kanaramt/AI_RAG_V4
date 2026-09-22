@@ -6,7 +6,7 @@ Orchestrates embedding generation.
 
 from typing import List
 
-from backend.services.embedding_service import EmbeddingService
+from services.embedding_service import EmbeddingService
 
 
 class EmbeddingEngine:

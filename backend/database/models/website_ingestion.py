@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, Text
-from backend.utils.datetime_utils import ist_now
-from backend.database.base import Base
+from utils.datetime_utils import ist_now
+from database.base import Base
 
 
 class CrawledWebsiteModel(Base):
@@ -91,3 +91,4 @@ class WebsiteConfigModel(Base):
         String,
         nullable=False,
     )
+

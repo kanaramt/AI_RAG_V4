@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 
-from backend.schemas.evaluation.evaluation_result import (
+from schemas.evaluation.evaluation_result import (
     EvaluationResult,
 )
-from backend.services.recommendation.recommendation_service import (
+from services.recommendation.recommendation_service import (
     RecommendationService,
 )
 

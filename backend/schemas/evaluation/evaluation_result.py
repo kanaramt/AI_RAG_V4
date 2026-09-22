@@ -1,5 +1,5 @@
 from datetime import datetime
-from backend.utils.datetime_utils import ist_now
+from utils.datetime_utils import ist_now
 from pydantic import BaseModel, Field
 
 

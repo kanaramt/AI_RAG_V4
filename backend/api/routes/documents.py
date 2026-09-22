@@ -5,10 +5,10 @@ from fastapi import APIRouter, File, UploadFile, Form, HTTPException, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from backend.dependencies import get_memory
-from backend.database.session import get_db
-from backend.settings import settings
-from backend.engines.ingestion.ingestion_engine import IngestionEngine
+from dependencies import get_memory
+from database.session import get_db
+from settings import settings
+from engines.ingestion.ingestion_engine import IngestionEngine
 
 router = APIRouter()
 
@@ -68,7 +68,7 @@ async def delete_document(doc_id: str, memory = Depends(get_memory)):
 
     # 1. Delete points from Qdrant
     try:
-        from backend.services.vector_store.factory import VectorStoreFactory
+        from services.vector_store.factory import VectorStoreFactory
         from qdrant_client.models import Filter, FieldCondition, MatchValue
         
         vector_store = VectorStoreFactory.create()
@@ -103,8 +103,8 @@ async def delete_document(doc_id: str, memory = Depends(get_memory)):
 
     # 4. Delete registry from SQLAlchemy database
     try:
-        from backend.database.session import SessionLocal
-        from backend.database.models.document_model import DocumentModel
+        from database.session import SessionLocal
+        from database.models.document_model import DocumentModel
         db_session = SessionLocal()
         db_session.query(DocumentModel).filter(DocumentModel.document_id == doc_id).delete()
         db_session.commit()
@@ -114,7 +114,7 @@ async def delete_document(doc_id: str, memory = Depends(get_memory)):
 
     # 5. Trigger KB Metadata Rebuild
     try:
-        from backend.services.kb_metadata_service import KBMetadataService
+        from services.kb_metadata_service import KBMetadataService
         import asyncio
         asyncio.create_task(KBMetadataService.rebuild_metadata())
     except Exception as e:
@@ -134,7 +134,7 @@ async def delete_all_documents(
     """
     # 1. Reset vector stores (Qdrant & FAISS)
     try:
-        from backend.services.vector_store.factory import VectorStoreFactory
+        from services.vector_store.factory import VectorStoreFactory
         from qdrant_client.models import VectorParams, Distance
         
         vector_store = VectorStoreFactory.create()
@@ -154,7 +154,7 @@ async def delete_all_documents(
 
     try:
         # Reset FAISS memory index
-        from backend.services.vector_store.factory import VectorStoreFactory
+        from services.vector_store.factory import VectorStoreFactory
         vector_store = VectorStoreFactory.create()
         faiss_store = vector_store.faiss
         faiss_store._index = None
@@ -203,9 +203,9 @@ async def delete_all_documents(
 
     try:
         # Clear knowledge asset catalog & crawled websites registry
-        from backend.database.models.knowledge_asset import KnowledgeAssetModel
-        from backend.database.models.website_ingestion import CrawledWebsiteModel
-        from backend.database.models.document_model import DocumentModel
+        from database.models.knowledge_asset import KnowledgeAssetModel
+        from database.models.website_ingestion import CrawledWebsiteModel
+        from database.models.document_model import DocumentModel
         
         # Delete everything
         db.query(KnowledgeAssetModel).delete()
@@ -219,7 +219,7 @@ async def delete_all_documents(
 
     # Rebuild KB Metadata Summary
     try:
-        from backend.services.kb_metadata_service import KBMetadataService
+        from services.kb_metadata_service import KBMetadataService
         import asyncio
         asyncio.create_task(KBMetadataService.rebuild_metadata())
     except Exception as e:
@@ -267,7 +267,7 @@ async def sync_knowledge_base(memory = Depends(get_memory)):
     Scan backend/data/ and all format subfolders and ingest all supported files
     not already registered in SQLite memory registry.
     """
-    from backend.services.knowledge_base_loader import KnowledgeBaseLoader
+    from services.knowledge_base_loader import KnowledgeBaseLoader
 
     sync_result = await KnowledgeBaseLoader.sync_knowledge_base(memory)
 

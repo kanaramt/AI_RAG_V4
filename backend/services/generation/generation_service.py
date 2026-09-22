@@ -1,8 +1,8 @@
-from backend.schemas.retrieval.retrieved_document import RetrievedDocument
+from schemas.retrieval.retrieved_document import RetrievedDocument
 
-from backend.services.generation.citation_manager import CitationManager
-from backend.services.generation.guardrails import Guardrails
-from backend.services.generation.response_generator import ResponseGenerator
+from services.generation.citation_manager import CitationManager
+from services.generation.guardrails import Guardrails
+from services.generation.response_generator import ResponseGenerator
 
 
 class GenerationService:

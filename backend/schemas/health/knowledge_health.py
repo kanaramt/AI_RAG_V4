@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from pydantic import BaseModel, Field
-from backend.utils.datetime_utils import ist_now
+from utils.datetime_utils import ist_now
 
 class KnowledgeHealth(BaseModel):
     """

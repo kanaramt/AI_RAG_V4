@@ -1,6 +1,6 @@
 from sqlalchemy import text
 
-from backend.database.database import engine
+from database.database import engine
 
 with engine.connect() as conn:
     rows = conn.execute(

@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 
-from backend.schemas.feedback.knowledge_feedback import (
+from schemas.feedback.knowledge_feedback import (
     KnowledgeFeedback,
 )
-from backend.services.feedback.feedback_service import (
+from services.feedback.feedback_service import (
     FeedbackService,
 )
 
@@ -22,7 +22,7 @@ async def submit_feedback(
     """
     Submit knowledge feedback and update interaction dataset JSON.
     """
-    from backend.services.dataset_service import DatasetService
+    from services.dataset_service import DatasetService
 
     success = feedback_service.submit(
         feedback

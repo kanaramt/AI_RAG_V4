@@ -3,14 +3,20 @@ import sys
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
-from backend.database.base import Base
-from backend.database.database import engine
-from backend.database.session import SessionLocal
-
+#from database.base import Base
+#from database.database import engine
+#from database.session import SessionLocal
+from database.base import Base
+from database.database import engine
+from database.session import SessionLocal
 # Import all SQLAlchemy models here
-from backend.database.models import *
-from backend.services.knowledge_base_loader import KnowledgeBaseLoader
-from backend.memory.memory_service import MemoryService
+#from database.models import *
+#from services.knowledge_base_loader import KnowledgeBaseLoader
+#from memory.memory_service import MemoryService
+from database.models import *
+from services.knowledge_base_loader import KnowledgeBaseLoader
+from memory.memory_service import MemoryService
+
 
 
 def safe_print(msg: str):
@@ -70,8 +76,10 @@ async def lifespan(
             safe_print(f"[Lifespan Migration Warning] Could not alter table: {e}")
             pass  # Column already exists
 
-        from backend.database.models.website_ingestion import CrawledWebsiteModel
-        from backend.services.website_crawler_service import WebsiteCrawlerService
+        #from database.models.website_ingestion import CrawledWebsiteModel
+        #from services.website_crawler_service import WebsiteCrawlerService
+        from database.models.website_ingestion import CrawledWebsiteModel
+        from services.website_crawler_service import WebsiteCrawlerService
 
         default_seeds = [
             {"url": "https://docs.langchain.com", "name": "LangChain Documentation"},

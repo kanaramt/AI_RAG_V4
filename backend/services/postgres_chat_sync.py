@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
 
-from backend.database.session import SessionLocal
-from backend.database.models.conversation_model import ConversationModel
-from backend.database.models.message_model import MessageModel
-from backend.database.models.chat_history_record_model import ChatHistoryRecordModel
+from database.session import SessionLocal
+from database.models.conversation_model import ConversationModel
+from database.models.message_model import MessageModel
+from database.models.chat_history_record_model import ChatHistoryRecordModel
 
 
 class PostgresChatSync:

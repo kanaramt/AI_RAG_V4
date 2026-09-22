@@ -4,11 +4,11 @@ from .evaluation_model import EvaluationModel
 from .recommendation_model import RecommendationModel
 from .website_ingestion import CrawledWebsiteModel, WebsiteConfigModel
 
-from backend.database.models.document_model import (
+from database.models.document_model import (
     DocumentModel,
 )
 
-from backend.database.models.chunk_model import (
+from database.models.chunk_model import (
     ChunkModel,
 )
 

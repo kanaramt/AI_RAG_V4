@@ -1,6 +1,6 @@
-from backend.llm.config import LLMConfig
-from backend.llm.registry import LLM_PROVIDER_REGISTRY
-from backend.llm.providers.base import BaseLLMProvider
+from llm.config import LLMConfig
+from llm.registry import LLM_PROVIDER_REGISTRY
+from llm.providers.base import BaseLLMProvider
 
 
 def _get_env_key(key_name: str, fallback_key: str = None) -> str:
@@ -59,7 +59,7 @@ class LLMFactory:
         Dynamically construct the LLM provider based on the model name.
         """
         import os
-        from backend.settings import settings
+        from settings import settings
 
         model_name_lower = model_name.lower()
         

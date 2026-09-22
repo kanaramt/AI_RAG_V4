@@ -1,7 +1,7 @@
-from backend.services.chunking.base_chunker import BaseChunker
-from backend.services.chunking.recursive_chunker import RecursiveChunker
-from backend.services.chunking.semantic_chunker import SemanticChunker
-from backend.services.chunking.token_chunker import TokenChunker
+from services.chunking.base_chunker import BaseChunker
+from services.chunking.recursive_chunker import RecursiveChunker
+from services.chunking.semantic_chunker import SemanticChunker
+from services.chunking.token_chunker import TokenChunker
 
 
 class ChunkerFactory:

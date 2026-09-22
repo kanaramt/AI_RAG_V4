@@ -1,15 +1,15 @@
 from pathlib import Path
-from backend.services.ingestion.base_loader import BaseLoader
-from backend.services.ingestion.csv_loader import CSVLoader
-from backend.services.ingestion.docx_loader import DocxLoader
-from backend.services.ingestion.excel_loader import ExcelLoader
-from backend.services.ingestion.image_loader import ImageLoader
-from backend.services.ingestion.markdown_loader import MarkdownLoader
-from backend.services.ingestion.pdf_loader import PDFLoader
-from backend.services.ingestion.text_loader import TextLoader
+from services.ingestion.base_loader import BaseLoader
+from services.ingestion.csv_loader import CSVLoader
+from services.ingestion.docx_loader import DocxLoader
+from services.ingestion.excel_loader import ExcelLoader
+from services.ingestion.image_loader import ImageLoader
+from services.ingestion.markdown_loader import MarkdownLoader
+from services.ingestion.pdf_loader import PDFLoader
+from services.ingestion.text_loader import TextLoader
 
 
-from backend.services.ingestion.web_loader import WebLoader
+from services.ingestion.web_loader import WebLoader
 
 
 class LoaderFactory:

@@ -1,4 +1,4 @@
-from backend.catalog.schemas.knowledge_asset import (
+from catalog.schemas.knowledge_asset import (
     KnowledgeAsset,
 )
 

@@ -1,11 +1,11 @@
 import uuid
 from datetime import datetime
 
-from backend.schemas.governance.approval import (
+from schemas.governance.approval import (
     ApprovalRequest,
     ApprovalStatus,
 )
-from backend.utils.datetime_utils import ist_now
+from utils.datetime_utils import ist_now
 
 class ApprovalService:
     """

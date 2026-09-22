@@ -1,19 +1,19 @@
 from pathlib import Path
 
-from backend.catalog.repositories.asset_sql_repository import (
+from catalog.repositories.asset_sql_repository import (
     AssetSQLRepository,
 )
-from backend.catalog.schemas.knowledge_asset import (
+from catalog.schemas.knowledge_asset import (
     AssetStatus,
     SourceType,
 )
-from backend.catalog.services.asset_service import (
+from catalog.services.asset_service import (
     AssetService,
 )
-from backend.catalog.health.knowledge_health_engine import (
+from catalog.health.knowledge_health_engine import (
     KnowledgeHealthEngine,
 )
-from backend.database.session import SessionLocal
+from database.session import SessionLocal
 
 
 class CatalogSyncService:

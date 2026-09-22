@@ -1,4 +1,4 @@
-from backend.schemas.recommendation.recommendation_result import (
+from schemas.recommendation.recommendation_result import (
     RecommendationResult,
 )
 

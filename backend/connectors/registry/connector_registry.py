@@ -21,8 +21,8 @@ Benefits
 
 from typing import Dict
 
-from backend.connectors.base.base_connector import BaseConnector
-from backend.connectors.base.connector_types import ConnectorType
+from connectors.base.base_connector import BaseConnector
+from connectors.base.connector_types import ConnectorType
 
 
 class ConnectorRegistry:

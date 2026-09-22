@@ -1,15 +1,15 @@
 from fastapi import APIRouter
 
-from backend.schemas.review.knowledge_review import (
+from schemas.review.knowledge_review import (
     KnowledgeReview,
 )
-from backend.schemas.review.review_status import (
+from schemas.review.review_status import (
     ReviewStatus,
 )
-from backend.services.knowledge_review.review_service import (
+from services.knowledge_review.review_service import (
     ReviewService,
 )
-from backend.services.recommendation.recommendation_service import (
+from services.recommendation.recommendation_service import (
     RecommendationService,
 )
 

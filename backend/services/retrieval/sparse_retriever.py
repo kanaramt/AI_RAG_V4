@@ -1,10 +1,10 @@
 import time
 
-from backend.schemas.retrieval.retrieval_request import RetrievalRequest
-from backend.schemas.retrieval.retrieval_response import RetrievalResponse
-from backend.schemas.retrieval.retrieved_document import RetrievedDocument
+from schemas.retrieval.retrieval_request import RetrievalRequest
+from schemas.retrieval.retrieval_response import RetrievalResponse
+from schemas.retrieval.retrieved_document import RetrievedDocument
 
-from backend.services.retrieval.base import BaseRetriever
+from services.retrieval.base import BaseRetriever
 
 
 class SparseRetriever(BaseRetriever):

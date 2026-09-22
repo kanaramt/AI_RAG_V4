@@ -1,12 +1,12 @@
 import time
 
-from backend.schemas.retrieval.retrieval_request import RetrievalRequest
-from backend.schemas.retrieval.retrieval_response import RetrievalResponse
+from schemas.retrieval.retrieval_request import RetrievalRequest
+from schemas.retrieval.retrieval_response import RetrievalResponse
 
-from backend.services.embedding_service import EmbeddingService
-from backend.services.retrieval.base import BaseRetriever
-from backend.services.vector_store.factory import VectorStoreFactory
-from backend.schemas.retrieval.retrieved_document import RetrievedDocument
+from services.embedding_service import EmbeddingService
+from services.retrieval.base import BaseRetriever
+from services.vector_store.factory import VectorStoreFactory
+from schemas.retrieval.retrieved_document import RetrievedDocument
 
 class DenseRetriever(BaseRetriever):
     """

@@ -6,7 +6,7 @@ Orchestrates all document processing.
 
 from fastapi import UploadFile
 
-from backend.services.document_intelligence import DocumentIntelligence
+from services.document_intelligence import DocumentIntelligence
 
 
 class DocumentIntelligenceEngine:

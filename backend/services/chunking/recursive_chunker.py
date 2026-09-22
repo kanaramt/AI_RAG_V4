@@ -1,7 +1,7 @@
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from backend.services.chunking.base_chunker import BaseChunker
+from services.chunking.base_chunker import BaseChunker
 
 
 class RecursiveChunker(BaseChunker):

@@ -1,5 +1,5 @@
-from backend.llm.factory import LLMFactory
-from backend.settings import settings
+from llm.factory import LLMFactory
+from settings import settings
 
 
 class HyDEGenerator:

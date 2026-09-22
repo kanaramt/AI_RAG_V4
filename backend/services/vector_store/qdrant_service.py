@@ -6,8 +6,8 @@ from qdrant_client.models import (
     VectorParams,
 )
 
-from backend.services.vector_store.base import BaseVectorStore
-from backend.settings import settings
+from services.vector_store.base import BaseVectorStore
+from settings import settings
 
 _qdrant_lock = threading.Lock()
 _shared_qdrant_client = None
@@ -163,5 +163,5 @@ class QdrantService(BaseVectorStore):
 
 
 if __name__ == "__main__":
-    from backend.settings import settings
+    from settings import settings
     QdrantService()

@@ -5,8 +5,8 @@ from sqlalchemy import (
     String,
 )
 
-from backend.database.base import Base
-from backend.utils.datetime_utils import ist_now
+from database.base import Base
+from utils.datetime_utils import ist_now
 
 
 class ConversationModel(Base):

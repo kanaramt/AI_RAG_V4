@@ -4,8 +4,8 @@ import json
 from datetime import datetime
 from uuid import uuid4
 from typing import List, Dict, Any
-from backend.services.postgres_chat_sync import PostgresChatSync
-from backend.settings import settings
+from services.postgres_chat_sync import PostgresChatSync
+from settings import settings
 
 class MemoryService:
     """
@@ -446,3 +446,4 @@ class MemoryService:
 
     def close(self):
         self.conn.close()
+

@@ -1,6 +1,6 @@
-from backend.settings import settings
+from settings import settings
 import ollama
-from backend.services.llm.base import BaseLLM
+from services.llm.base import BaseLLM
 
 
 class OllamaLLM(BaseLLM):

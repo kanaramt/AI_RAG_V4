@@ -1,5 +1,5 @@
-from backend.models.chunk import Chunk
-from backend.services.chunking.similarity import Similarity
+from models.chunk import Chunk
+from services.chunking.similarity import Similarity
 
 
 class ChunkValidator:

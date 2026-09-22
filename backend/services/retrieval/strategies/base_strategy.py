@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from backend.schemas.retrieval.retrieval_request import RetrievalRequest
-from backend.schemas.retrieval.retrieval_response import RetrievalResponse
+from schemas.retrieval.retrieval_request import RetrievalRequest
+from schemas.retrieval.retrieval_response import RetrievalResponse
 
 
 class BaseRetrievalStrategy(ABC):

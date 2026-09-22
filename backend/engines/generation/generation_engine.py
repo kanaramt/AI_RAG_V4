@@ -6,7 +6,7 @@ Orchestrates LLM response generation.
 
 from typing import Any
 
-from backend.llm.factory import LLMFactory
+from llm.factory import LLMFactory
 
 
 class GenerationEngine:

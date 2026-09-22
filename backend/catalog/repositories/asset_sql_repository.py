@@ -1,11 +1,11 @@
 from sqlalchemy.orm import Session
 
-from backend.catalog.schemas.knowledge_asset import (
+from catalog.schemas.knowledge_asset import (
     AssetStatus,
     KnowledgeAsset,
     SourceType,
 )
-from backend.database.models.knowledge_asset import (
+from database.models.knowledge_asset import (
     KnowledgeAssetModel,
 )
 

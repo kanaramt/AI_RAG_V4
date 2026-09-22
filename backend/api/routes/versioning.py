@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from backend.services.versioning.version_service import (
+from services.versioning.version_service import (
     VersionService,
 )
 

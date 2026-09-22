@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException
 
-from backend.schemas.jobs.job import (
+from schemas.jobs.job import (
     JobStatus,
     JobType,
 )
-from backend.services.jobs.job_service import (
+from services.jobs.job_service import (
     JobService,
 )
 

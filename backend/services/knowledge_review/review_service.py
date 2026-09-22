@@ -2,39 +2,39 @@ from anthropic.types.beta import beta_managed_agents_agent_tool_config_params
 from anthropic.types.beta import beta_managed_agents_agent_tool_config_params
 import uuid
 
-from backend.schemas.evaluation.evaluation_result import (
+from schemas.evaluation.evaluation_result import (
     EvaluationResult,
 )
-from backend.schemas.recommendation.recommendation_result import (
+from schemas.recommendation.recommendation_result import (
     RecommendationResult,
 )
-from backend.schemas.review.knowledge_review import (
+from schemas.review.knowledge_review import (
     KnowledgeReview,
 )
-from backend.schemas.review.review_status import (
+from schemas.review.review_status import (
     ReviewStatus,
 )
 
-from backend.services.evaluation.evaluation_service import (
+from services.evaluation.evaluation_service import (
     EvaluationService,
 )
-from backend.services.knowledge_review.review_repository import (
+from services.knowledge_review.review_repository import (
     ReviewRepository,
 )
-from backend.services.recommendation.recommendation_service import (
+from services.recommendation.recommendation_service import (
     RecommendationService,
 )
 
-from backend.database.session import SessionLocal
+from database.session import SessionLocal
 
-from backend.services.knowledge_review.review_sql_repository import (
+from services.knowledge_review.review_sql_repository import (
     ReviewSQLRepository,
 )
 
-from backend.services.knowledge_review.review_analytics import (
+from services.knowledge_review.review_analytics import (
     ReviewAnalytics,
 )
-from backend.services.evaluation.evaluation_sql_repository import (
+from services.evaluation.evaluation_sql_repository import (
     EvaluationSQLRepository,
 )
 

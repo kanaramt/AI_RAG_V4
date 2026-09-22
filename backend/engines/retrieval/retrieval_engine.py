@@ -4,8 +4,8 @@ Enterprise Retrieval Engine
 Orchestrates retrieval workflows.
 """
 
-from backend.schemas.retrieval.retrieval_request import RetrievalRequest
-from backend.services.retrieval.retrieval_service import RetrievalService
+from schemas.retrieval.retrieval_request import RetrievalRequest
+from services.retrieval.retrieval_service import RetrievalService
 
 
 class RetrievalEngine:

@@ -1,4 +1,4 @@
-from backend.schemas.versioning.document_version import (
+from schemas.versioning.document_version import (
     DocumentVersion,
 )
 

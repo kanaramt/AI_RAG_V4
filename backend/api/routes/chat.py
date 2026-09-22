@@ -5,14 +5,14 @@ import json
 from typing import List, Dict, Any
 from fastapi import APIRouter, HTTPException, Depends
 
-from backend.schemas.chat import ChatCreateSchema, RenameSchema, ChatRequest, ChatResponse
-from backend.dependencies import get_memory, get_retrieval_service
-from backend.schemas.retrieval.retrieval_request import RetrievalRequest
-from backend.services.retrieval.retrieval_service import RetrievalService
-from backend.services.evaluation_service import calculate_rag_metrics
-from backend.services.ingestion_service import IngestionService
-from backend.engines.generation.generation_engine import GenerationEngine
-from backend.settings import settings
+from schemas.chat import ChatCreateSchema, RenameSchema, ChatRequest, ChatResponse
+from dependencies import get_memory, get_retrieval_service
+from schemas.retrieval.retrieval_request import RetrievalRequest
+from services.retrieval.retrieval_service import RetrievalService
+from services.evaluation_service import calculate_rag_metrics
+from services.ingestion_service import IngestionService
+from engines.generation.generation_engine import GenerationEngine
+from settings import settings
 
 router = APIRouter()
 
@@ -112,7 +112,7 @@ def ocr_base64_image(data_url: str) -> str:
     try:
         import numpy as np
         import cv2
-        from backend.services.document_intelligence import DocumentIntelligence
+        from services.document_intelligence import DocumentIntelligence
         
         if "," in data_url:
             header, base64_data = data_url.split(",", 1)
@@ -203,7 +203,7 @@ async def extract_attachment_content(attach: dict) -> str:
         
         import io
         from fastapi import UploadFile
-        from backend.services.document_intelligence import DocumentIntelligence
+        from services.document_intelligence import DocumentIntelligence
         
         mock_file = UploadFile(
             filename=name,
@@ -351,7 +351,7 @@ async def post_message(
         user_content = f"Context: This is a capability query. Here are the active files in the knowledge base:\n{kb_context}\n\nUser Question: {query}"
         messages.append({"role": "user", "content": user_content})
         
-        from backend.engines.generation.generation_engine import GenerationEngine
+        from engines.generation.generation_engine import GenerationEngine
         generation_engine = GenerationEngine()
         
         try:
@@ -450,7 +450,7 @@ async def post_message(
     citations = []
 
     if urls:
-        from backend.services.ingestion.web_loader import WebLoader
+        from services.ingestion.web_loader import WebLoader
         for url in urls:
             clean_url = url.rstrip('.,;()[]{}')
             try:
@@ -551,7 +551,7 @@ async def post_message(
                     "content": f"Conversation History:\n{history_str}\nFollow-up Query: {query}\n\nOptimized Search Query:"
                 }
             ]
-            from backend.engines.generation.generation_engine import GenerationEngine
+            from engines.generation.generation_engine import GenerationEngine
             generation_engine = GenerationEngine()
             
             model_name = data.model
@@ -580,7 +580,7 @@ async def post_message(
         
         # Embedding preview
         try:
-            from backend.services.embedding_service import EmbeddingService
+            from services.embedding_service import EmbeddingService
             _emb_preview = EmbeddingService().generate_embedding(query)
             emb_dims = len(_emb_preview) if _emb_preview else 0
             pipeline_trace.append({
@@ -668,7 +668,7 @@ async def post_message(
                 seen_ids = {doc.id for doc in combined_docs}
                 
                 import asyncio
-                from backend.services.retrieval.strategies.hybrid_strategy import HybridStrategy
+                from services.retrieval.strategies.hybrid_strategy import HybridStrategy
                 hybrid_strategy = HybridStrategy()
                 tasks = [
                     hybrid_strategy.retrieve(RetrievalRequest(
@@ -701,7 +701,7 @@ async def post_message(
                     if doc.score >= min_score
                 ]
                 # Rebuild context string
-                from backend.services.retrieval.context_builder import ContextBuilder
+                from services.retrieval.context_builder import ContextBuilder
                 retrieved_context_str = ContextBuilder.build(response_retrieval.documents)
                 num_docs = len(response_retrieval.documents)
                 print(f"[Retrieval Refinement] Completed refinement. Combined Docs Count: {num_docs}, New Best Score: {best_score:.4f}, Relevant: {len(relevant_chunks)}")
@@ -760,7 +760,7 @@ async def post_message(
         role = "user" if msg['sender'] == 'user' else "assistant"
         messages.append({"role": role, "content": msg['text']})
 
-    from backend.services.generation.prompt_builder import PromptBuilder
+    from services.generation.prompt_builder import PromptBuilder
     prompt_builder = PromptBuilder()
 
     if has_attachments:
@@ -771,7 +771,7 @@ async def post_message(
         
     messages.append({"role": "user", "content": user_content})
 
-    from backend.engines.generation.generation_engine import GenerationEngine
+    from engines.generation.generation_engine import GenerationEngine
     generation_engine = GenerationEngine()
     
     response_text = ""
@@ -908,8 +908,8 @@ async def post_message(
 
     # 11. Store Dialogue turn to Long-Term Memory (vector index in Qdrant)
     try:
-        from backend.services.vector_store.qdrant_service import QdrantService
-        from backend.services.embedding_service import EmbeddingService
+        from services.vector_store.qdrant_service import QdrantService
+        from services.embedding_service import EmbeddingService
         
         qdrant_memory = QdrantService(collection_name="long_term_memory")
         dialogue_content = f"User: {query}\nAssistant: {response_text}"
@@ -949,9 +949,9 @@ async def post_message(
         # Also persist to PostgreSQL evaluation_results table (visible in PGAdmin)
         try:
             from uuid import uuid4
-            from backend.database.session import SessionLocal
-            from backend.services.evaluation.evaluation_sql_repository import EvaluationSQLRepository
-            from backend.schemas.evaluation.evaluation_result import EvaluationResult
+            from database.session import SessionLocal
+            from services.evaluation.evaluation_sql_repository import EvaluationSQLRepository
+            from schemas.evaluation.evaluation_result import EvaluationResult
 
             confidence_score = round((c_rel + faith + a_rel) / 3.0, 3)
             sim_score = 0.0
@@ -1122,7 +1122,7 @@ async def post_message(
 
     # 15. Automatically capture user interaction to Dataset Collection (data/query_dataset/*.json)
     try:
-        from backend.services.dataset_service import DatasetService
+        from services.dataset_service import DatasetService
         retrieved_chunk_text = [c.get("snippet") or c.get("text") for c in citations if (c.get("snippet") or c.get("text"))]
 
         dataset_record = DatasetService.save_interaction(

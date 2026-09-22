@@ -1,10 +1,10 @@
-from backend.schemas.health.knowledge_health import (
+from schemas.health.knowledge_health import (
     KnowledgeHealth,
 )
-from backend.schemas.review.review_status import (
+from schemas.review.review_status import (
     ReviewStatus,
 )
-from backend.services.knowledge_review.review_repository import (
+from services.knowledge_review.review_repository import (
     ReviewRepository,
 )
 

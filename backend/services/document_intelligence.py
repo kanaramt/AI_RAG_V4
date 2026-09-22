@@ -1,6 +1,6 @@
 from pathlib import Path
 from fastapi import HTTPException, UploadFile
-from backend.services.document_extractor import DocumentExtractor
+from services.document_extractor import DocumentExtractor
 
 
 class DocumentIntelligence:

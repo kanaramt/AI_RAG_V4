@@ -1,5 +1,5 @@
-from backend.services.embeddings.base_embedding import BaseEmbedding
-from backend.services.embedding_service import EmbeddingService
+from services.embeddings.base_embedding import BaseEmbedding
+from services.embedding_service import EmbeddingService
 
 
 class OllamaEmbedding(BaseEmbedding):

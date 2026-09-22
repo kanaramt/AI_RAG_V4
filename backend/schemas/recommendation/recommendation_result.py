@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Literal
-from backend.utils.datetime_utils import ist_now
+from utils.datetime_utils import ist_now
 from pydantic import BaseModel, Field
 
 

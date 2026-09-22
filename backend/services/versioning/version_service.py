@@ -1,14 +1,14 @@
 import uuid
 from datetime import datetime
 
-from backend.schemas.versioning.document_version import (
+from schemas.versioning.document_version import (
     DocumentVersion,
     VersionStatus,
 )
-from backend.services.versioning.version_repository import (
+from services.versioning.version_repository import (
     VersionRepository,
 )
-from backend.utils.datetime_utils import ist_now
+from utils.datetime_utils import ist_now
 
 class VersionService:
     """

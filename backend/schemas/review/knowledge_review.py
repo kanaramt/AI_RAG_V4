@@ -1,18 +1,18 @@
 from datetime import datetime
-from backend.schemas.review.review_status import ReviewStatus
+from schemas.review.review_status import ReviewStatus
 
 from pydantic import BaseModel, Field
 
-from backend.schemas.feedback.knowledge_feedback import (
+from schemas.feedback.knowledge_feedback import (
     KnowledgeFeedback,
 )
-from backend.schemas.retrieval.retrieval_metrics import (
+from schemas.retrieval.retrieval_metrics import (
     RetrievalMetrics,
 )
-from backend.schemas.retrieval.source_reference import (
+from schemas.retrieval.source_reference import (
     SourceReference,
 )
-from backend.utils.datetime_utils import ist_now
+from utils.datetime_utils import ist_now
 
 class KnowledgeReview(BaseModel):
     """

@@ -1,6 +1,6 @@
-from backend.services.chunking.chunk_validator import ChunkValidator
-from backend.services.chunking.chunker_factory import ChunkerFactory
-from backend.services.ingestion.loader_factory import LoaderFactory
+from services.chunking.chunk_validator import ChunkValidator
+from services.chunking.chunker_factory import ChunkerFactory
+from services.ingestion.loader_factory import LoaderFactory
 
 
 

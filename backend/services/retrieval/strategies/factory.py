@@ -1,6 +1,6 @@
-from backend.services.retrieval.strategies.hybrid_strategy import HybridStrategy
-from backend.services.retrieval.strategies.multi_query_strategy import MultiQueryStrategy
-from backend.services.retrieval.strategies.hyde_strategy import HyDEStrategy
+from services.retrieval.strategies.hybrid_strategy import HybridStrategy
+from services.retrieval.strategies.multi_query_strategy import MultiQueryStrategy
+from services.retrieval.strategies.hyde_strategy import HyDEStrategy
 
 
 class RetrievalStrategyFactory:

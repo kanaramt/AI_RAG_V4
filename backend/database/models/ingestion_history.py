@@ -1,5 +1,5 @@
 from datetime import datetime
-from backend.utils.datetime_utils import ist_now
+from utils.datetime_utils import ist_now
 from sqlalchemy import (
     Column,
     DateTime,
@@ -8,7 +8,7 @@ from sqlalchemy import (
     String,
 )
 
-from backend.database.base import Base
+from database.base import Base
 
 
 class IngestionHistoryModel(Base):

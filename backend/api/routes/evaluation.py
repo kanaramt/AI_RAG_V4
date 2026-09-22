@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 
-from backend.schemas.review.knowledge_review import (
+from schemas.review.knowledge_review import (
     KnowledgeReview,
 )
-from backend.services.evaluation.evaluation_service import (
+from services.evaluation.evaluation_service import (
     EvaluationService,
 )
 

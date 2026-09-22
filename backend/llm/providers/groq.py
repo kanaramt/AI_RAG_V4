@@ -2,8 +2,8 @@ import os
 import httpx
 from typing import Any, AsyncGenerator
 
-from backend.llm.config import LLMConfig
-from backend.llm.providers.base import BaseLLMProvider
+from llm.config import LLMConfig
+from llm.providers.base import BaseLLMProvider
 
 
 class GroqProvider(BaseLLMProvider):
@@ -57,3 +57,4 @@ class GroqProvider(BaseLLMProvider):
 
     async def health_check(self) -> bool:
         return bool(self.api_key)
+

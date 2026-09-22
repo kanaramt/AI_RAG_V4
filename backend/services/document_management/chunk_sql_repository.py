@@ -1,10 +1,10 @@
 from sqlalchemy.orm import Session
 
-from backend.database.models.chunk_model import (
+from database.models.chunk_model import (
     ChunkModel,
 )
 
-from backend.schemas.knowledge.chunk_schema import (
+from schemas.knowledge.chunk_schema import (
     ChunkSchema,
 )
 

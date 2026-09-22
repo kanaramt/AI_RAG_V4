@@ -4,12 +4,12 @@ from anthropic.types.beta import beta_managed_agents_agent_tool_config_params
 from anthropic.types.beta import beta_managed_agents_agent_tool_config_params
 from anthropic.types.beta import beta_managed_agents_agent_tool_config_params
 from anthropic.types.beta import beta_managed_agents_agent_tool_config_params
-from backend.schemas.retrieval.retrieval_request import RetrievalRequest
-from backend.schemas.retrieval.retrieval_response import RetrievalResponse
-from backend.settings import settings
+from schemas.retrieval.retrieval_request import RetrievalRequest
+from schemas.retrieval.retrieval_response import RetrievalResponse
+from settings import settings
 
-from backend.services.retrieval.strategies.factory import RetrievalStrategyFactory
-from backend.services.retrieval.strategies.multi_query_strategy import MultiQueryStrategy
+from services.retrieval.strategies.factory import RetrievalStrategyFactory
+from services.retrieval.strategies.multi_query_strategy import MultiQueryStrategy
 
 
 class RetrievalService:

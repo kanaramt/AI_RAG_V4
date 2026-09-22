@@ -22,14 +22,14 @@ try:
 except Exception:
     pass
 
-#from backend.lifespan import lifespan
+#from lifespan import lifespan
 from lifespan import lifespan
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-#from backend.settings import settings
-#from backend.api.router import api_router
+#from settings import settings
+#from api.router import api_router
 from settings import settings
 from api.router import api_router
 

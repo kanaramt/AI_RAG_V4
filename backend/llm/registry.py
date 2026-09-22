@@ -1,9 +1,9 @@
-from backend.llm.providers.claude import ClaudeProvider
-from backend.llm.providers.gemini import GeminiProvider
-from backend.llm.providers.grok import GrokProvider
-from backend.llm.providers.groq import GroqProvider
-from backend.llm.providers.ollama import OllamaProvider
-from backend.llm.providers.openai import OpenAIProvider
+from llm.providers.claude import ClaudeProvider
+from llm.providers.gemini import GeminiProvider
+from llm.providers.grok import GrokProvider
+from llm.providers.groq import GroqProvider
+from llm.providers.ollama import OllamaProvider
+from llm.providers.openai import OpenAIProvider
 
 
 LLM_PROVIDER_REGISTRY = {

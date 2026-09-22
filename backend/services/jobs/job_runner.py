@@ -1,11 +1,11 @@
 import time
 
-from backend.schemas.jobs.job import (
+from schemas.jobs.job import (
     Job,
     JobStatus,
     JobType,
 )
-from backend.services.jobs.job_service import (
+from services.jobs.job_service import (
     JobService,
 )
 

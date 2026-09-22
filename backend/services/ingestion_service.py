@@ -1,4 +1,4 @@
-from backend import database
+import database
 import os
 import time
 import requests
@@ -6,41 +6,41 @@ from bs4 import BeautifulSoup
 from pathlib import Path
 from uuid import uuid4
 from typing import Dict, Any
-from backend.utils.datetime_utils import ist_now
+from utils.datetime_utils import ist_now
 
-from backend.settings import settings
-from backend.services.document_chunker import DocumentChunker
-from backend.engines.document_intelligence.document_intelligence_engine import (
+from settings import settings
+from services.document_chunker import DocumentChunker
+from engines.document_intelligence.document_intelligence_engine import (
     DocumentIntelligenceEngine,
 )
-from backend.catalog.services.catalog_sync_service import (
+from catalog.services.catalog_sync_service import (
     CatalogSyncService,
 )
-from backend.services.embedding_service import EmbeddingService
-from backend.services.vector_store.factory import VectorStoreFactory
+from services.embedding_service import EmbeddingService
+from services.vector_store.factory import VectorStoreFactory
 from datetime import datetime
 
-from backend.database.session import SessionLocal
+from database.session import SessionLocal
 
-from backend.services.document_management.document_sql_repository import (
+from services.document_management.document_sql_repository import (
     DocumentSQLRepository,
 )
-from backend.services.document_management.chunk_sql_repository import (
+from services.document_management.chunk_sql_repository import (
     ChunkSQLRepository,
 )
 
-from backend.services.ingestion_history.ingestion_history_sql_repository import (
+from services.ingestion_history.ingestion_history_sql_repository import (
     IngestionHistorySQLRepository,
 )
 
-from backend.schemas.knowledge.document_schema import (
+from schemas.knowledge.document_schema import (
     DocumentSchema,
 )
-from backend.schemas.knowledge.chunk_schema import (
+from schemas.knowledge.chunk_schema import (
     ChunkSchema,
 )
 
-from backend.database.models.ingestion_history import (
+from database.models.ingestion_history import (
     IngestionHistoryModel,
 )
 
@@ -146,7 +146,7 @@ class IngestionService:
         )
 
         # Rebuild KB Metadata Summary
-        from backend.services.kb_metadata_service import KBMetadataService
+        from services.kb_metadata_service import KBMetadataService
         import asyncio
         asyncio.create_task(KBMetadataService.rebuild_metadata())
 
@@ -350,7 +350,7 @@ class IngestionService:
         )
 
         # Rebuild KB Metadata Summary
-        from backend.services.kb_metadata_service import KBMetadataService
+        from services.kb_metadata_service import KBMetadataService
         import asyncio
         asyncio.create_task(KBMetadataService.rebuild_metadata())
 
@@ -372,7 +372,7 @@ class IngestionService:
             dict containing: status, doc_id, url, page_title, pages_loaded, chunks_created, processing_time_ms, vector_db_status
         """
         import asyncio
-        from backend.services.ingestion.web_loader import WebLoader
+        from services.ingestion.web_loader import WebLoader
         start_time = time.time()
 
         # 1. Fetch & clean webpage using WebLoader
@@ -437,7 +437,7 @@ class IngestionService:
             db.close()
 
         # Rebuild KB Metadata Summary
-        from backend.services.kb_metadata_service import KBMetadataService
+        from services.kb_metadata_service import KBMetadataService
         asyncio.create_task(KBMetadataService.rebuild_metadata())
 
         elapsed_ms = round((time.time() - start_time) * 1000, 2)
@@ -505,7 +505,7 @@ class IngestionService:
                 db.close()
 
             # Rebuild KB Metadata Summary
-            from backend.services.kb_metadata_service import KBMetadataService
+            from services.kb_metadata_service import KBMetadataService
             asyncio.create_task(KBMetadataService.rebuild_metadata())
             
             return True
@@ -523,3 +523,4 @@ class IngestionService:
         i = int(math.floor(math.log(size_in_bytes) / math.log(k))) if size_in_bytes > 0 else 0
         val = size_in_bytes / (k ** i)
         return f"{val:.1f} {sizes[i]}"
+

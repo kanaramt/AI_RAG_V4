@@ -1,19 +1,19 @@
 import time
 
-from backend.schemas.retrieval.retrieval_metrics import RetrievalMetrics
-from backend.schemas.retrieval.retrieval_request import RetrievalRequest
-from backend.schemas.retrieval.retrieval_response import RetrievalResponse
+from schemas.retrieval.retrieval_metrics import RetrievalMetrics
+from schemas.retrieval.retrieval_request import RetrievalRequest
+from schemas.retrieval.retrieval_response import RetrievalResponse
 
-from backend.services.retrieval.context_builder import ContextBuilder
-from backend.services.retrieval.dense_retriever import DenseRetriever
-from backend.services.retrieval.metadata_filter import MetadataFilter
-from backend.services.retrieval.query_rewriter import QueryRewriter
-from backend.services.retrieval.reranker import Reranker
-from backend.services.retrieval.score_fusion import ScoreFusion
-from backend.services.retrieval.source_grounding import (
+from services.retrieval.context_builder import ContextBuilder
+from services.retrieval.dense_retriever import DenseRetriever
+from services.retrieval.metadata_filter import MetadataFilter
+from services.retrieval.query_rewriter import QueryRewriter
+from services.retrieval.reranker import Reranker
+from services.retrieval.score_fusion import ScoreFusion
+from services.retrieval.source_grounding import (
     SourceGroundingService,
 )
-from backend.services.retrieval.sparse_retriever import SparseRetriever
+from services.retrieval.sparse_retriever import SparseRetriever
 
 from .base_strategy import BaseRetrievalStrategy
 

@@ -1,8 +1,8 @@
 import os
 from typing import Any, AsyncGenerator
 
-from backend.llm.config import LLMConfig
-from backend.llm.providers.base import BaseLLMProvider
+from llm.config import LLMConfig
+from llm.providers.base import BaseLLMProvider
 
 
 class OpenAIProvider(BaseLLMProvider):

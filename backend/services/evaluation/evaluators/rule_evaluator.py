@@ -1,9 +1,9 @@
 import uuid
 
-from backend.schemas.evaluation.evaluation_result import (
+from schemas.evaluation.evaluation_result import (
     EvaluationResult,
 )
-from backend.schemas.review.knowledge_review import (
+from schemas.review.knowledge_review import (
     KnowledgeReview,
 )
 

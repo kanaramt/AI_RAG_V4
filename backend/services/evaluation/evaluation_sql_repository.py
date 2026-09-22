@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
 
-from backend.database.models.evaluation_model import (
+from database.models.evaluation_model import (
     EvaluationModel,
 )
-from backend.schemas.evaluation.evaluation_result import (
+from schemas.evaluation.evaluation_result import (
     EvaluationResult,
 )
 

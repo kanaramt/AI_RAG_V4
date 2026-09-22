@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from backend.services.ingestion.base_loader import BaseLoader
+from services.ingestion.base_loader import BaseLoader
 
 
 class DocumentLoader(BaseLoader):

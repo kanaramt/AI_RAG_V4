@@ -1,15 +1,15 @@
 import json
 from pathlib import Path
 
-from backend.database.session import (
+from database.session import (
     SessionLocal,
 )
 
-from backend.services.document_management.document_sql_repository import (
+from services.document_management.document_sql_repository import (
     DocumentSQLRepository,
 )
 
-from backend.services.document_management.chunk_sql_repository import (
+from services.document_management.chunk_sql_repository import (
     ChunkSQLRepository,
 )
 

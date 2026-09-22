@@ -2,7 +2,7 @@ import os
 import httpx
 from typing import List
 
-from backend.settings import settings
+from settings import settings
 
 
 class EmbeddingService:
@@ -46,7 +46,7 @@ class EmbeddingService:
 
         # 2. Google Gemini API Embeddings (e.g. text-embedding-004)
         elif "gemini" in model_lower or "004" in model_lower:
-            from backend.llm.factory import _get_env_key
+            from llm.factory import _get_env_key
             api_key = _get_env_key("GEMINI_API_KEY", "GOOGLE_API_KEY")
             if not api_key:
                 print("[EmbeddingService] Gemini key missing, falling back to Ollama")
@@ -96,7 +96,7 @@ class EmbeddingService:
             return self._generate_hash_fallback(texts)
 
     def _try_gemini_fallback(self, texts: List[str]) -> List[List[float]] | None:
-        from backend.llm.factory import _get_env_key
+        from llm.factory import _get_env_key
         api_key = _get_env_key("GEMINI_API_KEY", "GOOGLE_API_KEY")
         if not api_key:
             return None

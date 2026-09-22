@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from backend.database.session import get_db
+from database.session import get_db
 
-from backend.catalog.repositories.asset_sql_repository import (
+from catalog.repositories.asset_sql_repository import (
     AssetSQLRepository,
 )
 

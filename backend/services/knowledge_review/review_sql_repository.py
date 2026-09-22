@@ -1,12 +1,12 @@
 from sqlalchemy.orm import Session
 
-from backend.database.models.review_model import (
+from database.models.review_model import (
     ReviewModel,
 )
-from backend.schemas.review.knowledge_review import (
+from schemas.review.knowledge_review import (
     KnowledgeReview,
 )
-from backend.schemas.review.review_status import (
+from schemas.review.review_status import (
     ReviewStatus,
 )
 

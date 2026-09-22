@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
 
-from backend.services.document_management.json_export_service import (
+from services.document_management.json_export_service import (
     JSONExportService,
 )
 
