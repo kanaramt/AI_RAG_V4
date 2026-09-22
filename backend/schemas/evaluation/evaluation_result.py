@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from backend.utils.datetime_utils import ist_now
 from pydantic import BaseModel, Field
 
 
@@ -37,5 +37,5 @@ class EvaluationResult(BaseModel):
     evaluated_by: str = Field(default="system")
 
     created_at: datetime = Field(
-        default_factory=datetime.utcnow
+        default_factory=ist_now
     )

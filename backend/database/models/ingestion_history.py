@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from backend.utils.datetime_utils import ist_now
 from sqlalchemy import (
     Column,
     DateTime,
@@ -57,6 +57,6 @@ class IngestionHistoryModel(Base):
     )
 
     created_at = Column(
-        DateTime,
-        default=datetime.utcnow,
+        DateTime(timezone=True),
+        default=ist_now,
     )

@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from backend.utils.datetime_utils import ist_now
 from sqlalchemy import (
     Column,
     DateTime,
@@ -104,14 +104,14 @@ class KnowledgeAssetModel(Base):
     )
 
     created_at = Column(
-        DateTime,
-        default=datetime.utcnow,
+        DateTime(timezone=True),
+        default=ist_now,
     )
 
     updated_at = Column(
-        DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        DateTime(timezone=True),
+        default=ist_now,
+        onupdate=ist_now,
     )
 
     metadata_json = Column(

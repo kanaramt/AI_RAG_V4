@@ -50,3 +50,6 @@ rank_bm25
 structlog
 pytest
 pytest-asyncio
+
+SQLAlchemy==2.0.51
+psycopg2-binary==2.9.12

@@ -2,7 +2,7 @@ from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import Float
 from sqlalchemy import String
-
+from backend.utils.datetime_utils import ist_now
 from backend.database.base import Base
 
 
@@ -35,6 +35,6 @@ class KnowledgeReviewModel(Base):
     )
 
     created_at = Column(
-        DateTime,
-        nullable=False,
+        DateTime(timezone=True),
+        default=ist_now,
     )

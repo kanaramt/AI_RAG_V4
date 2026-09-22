@@ -7,25 +7,46 @@ from backend.llm.providers.base import BaseLLMProvider
 
 
 GEMINI_MODEL_ALIASES = {
-    "gemini-2.5-flash-lite": "gemini-2.0-flash-lite",
-    "gemini-flash-lite": "gemini-2.0-flash-lite",
-    "gemini-1.5-flash-lite": "gemini-2.0-flash-lite",
-    "gemini-1.5-flash": "gemini-flash-latest",
-    "gemini-1.5-pro": "gemini-2.5-pro",
+    # Direct active models
+    "gemini-3.1-flash-lite": "gemini-3.1-flash-lite",
+    "gemini-3.5-flash-lite": "gemini-3.5-flash-lite",
+    # Deprecated & legacy aliases → working active models
+    "gemini-2.5-flash": "gemini-3.5-flash-lite",
+    "gemini-2.5-flash-lite": "gemini-3.1-flash-lite",
+    "gemini-2.0-flash": "gemini-3.5-flash-lite",
+    "gemini-2.0-flash-lite": "gemini-3.1-flash-lite",
+    "gemini-flash-lite": "gemini-3.1-flash-lite",
+    "gemini-1.5-flash-lite": "gemini-3.1-flash-lite",
+    "gemini-1.5-flash": "gemini-3.5-flash-lite",
+    "gemini-1.5-pro": "gemini-3.5-flash-lite",
+    "gemini-flash-latest": "gemini-3.5-flash-lite",
 }
 
 
 class GeminiProvider(BaseLLMProvider):
     """
-    Google Gemini LLM Provider supporting Gemini 2.5 Flash, Gemini 2.0 Flash Lite, Gemini 2.0 Flash, Gemini 2.5 Pro.
+    Google Gemini LLM Provider supporting gemini-3.5-flash-lite and gemini-3.1-flash-lite.
     Includes smart model aliasing and multi-tier REST API fallback.
     """
 
     def __init__(self, config: LLMConfig):
         self.config = config
-        raw_model = config.model or "gemini-2.5-flash"
+        raw_model = config.model or "gemini-3.5-flash-lite"
         self.model = GEMINI_MODEL_ALIASES.get(raw_model.lower(), raw_model)
-        self.api_key = config.api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        
+        # Resolve key from config, os.environ, or .env
+        api_k = config.api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        if not api_k:
+            try:
+                from pathlib import Path
+                from dotenv import dotenv_values
+                env_file = Path(__file__).resolve().parent.parent.parent.parent / ".env"
+                if env_file.exists():
+                    env_dict = dotenv_values(env_file)
+                    api_k = env_dict.get("GEMINI_API_KEY") or env_dict.get("GOOGLE_API_KEY")
+            except Exception:
+                pass
+        self.api_key = api_k
 
     async def _chat_rest(self, messages: list[dict[str, str]], temperature: float) -> str:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
@@ -57,12 +78,8 @@ class GeminiProvider(BaseLLMProvider):
                 # If specific model name returns 404, fallback through valid active Gemini models
                 if resp.status_code == 404:
                     fallback_candidates = [
-                        "gemini-2.5-flash",
-                        "gemini-2.0-flash-lite",
-                        "gemini-flash-latest",
-                        "gemini-flash-lite-latest",
-                        "gemini-2.0-flash",
-                        "gemini-2.5-pro"
+                        "gemini-3.5-flash-lite",
+                        "gemini-3.1-flash-lite",
                     ]
                     for fb_model in fallback_candidates:
                         if self.model != fb_model:

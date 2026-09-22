@@ -5,7 +5,7 @@ from backend.schemas.governance.approval import (
     ApprovalRequest,
     ApprovalStatus,
 )
-
+from backend.utils.datetime_utils import ist_now
 
 class ApprovalService:
     """
@@ -62,7 +62,7 @@ class ApprovalService:
 
                 request.comments = comments
 
-                request.updated_at = datetime.utcnow()
+                request.updated_at = ist_now
 
                 return True
 

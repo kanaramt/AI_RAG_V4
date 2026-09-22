@@ -8,7 +8,7 @@ from backend.schemas.versioning.document_version import (
 from backend.services.versioning.version_repository import (
     VersionRepository,
 )
-
+from backend.utils.datetime_utils import ist_now
 
 class VersionService:
     """
@@ -64,7 +64,7 @@ class VersionService:
 
                 version.status = VersionStatus.ACTIVE
 
-                version.activated_at = datetime.utcnow()
+                version.activated_at = ist_now()
 
                 return True
 

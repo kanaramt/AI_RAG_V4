@@ -23,7 +23,7 @@ from backend.catalog.schemas.knowledge_asset import (
 from backend.catalog.search.asset_search import (
     AssetSearch,
 )
-
+from backend.utils.datetime_utils import ist_now
 
 class AssetService:
     """
@@ -96,7 +96,7 @@ class AssetService:
         asset: KnowledgeAsset,
     ) -> KnowledgeAsset:
 
-        asset.updated_at = datetime.utcnow()
+        asset.updated_at = ist_now
 
         return self.repository.update(asset)
 

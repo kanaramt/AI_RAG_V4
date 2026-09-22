@@ -3,6 +3,33 @@ from backend.llm.registry import LLM_PROVIDER_REGISTRY
 from backend.llm.providers.base import BaseLLMProvider
 
 
+def _get_env_key(key_name: str, fallback_key: str = None) -> str:
+    """
+    Robust key resolver: checks os.environ, and if missing, reloads directly from .env file.
+    """
+    import os
+    from pathlib import Path
+    from dotenv import dotenv_values
+
+    val = os.getenv(key_name) or (os.getenv(fallback_key) if fallback_key else None)
+    if val and val.strip():
+        return val.strip()
+
+    try:
+        env_file = Path(__file__).resolve().parent.parent.parent / ".env"
+        if env_file.exists():
+            env_dict = dotenv_values(env_file)
+            val = env_dict.get(key_name) or (env_dict.get(fallback_key) if fallback_key else None)
+            if val and val.strip():
+                os.environ[key_name] = val.strip()
+                if fallback_key:
+                    os.environ[fallback_key] = val.strip()
+                return val.strip()
+    except Exception:
+        pass
+    return ""
+
+
 class LLMFactory:
     """
     Factory responsible for creating
@@ -39,35 +66,35 @@ class LLMFactory:
         if "gpt" in model_name_lower:
             provider = "openai"
             model = "gpt-4o"
-            api_key = os.getenv("OPENAI_API_KEY")
+            api_key = _get_env_key("OPENAI_API_KEY")
             if not api_key:
                 raise ValueError("⚠️ OpenAI API Key is missing. Please add your OPENAI_API_KEY in Settings -> API Keys & Cloud LLMs.")
             base_url = None
         elif "claude" in model_name_lower:
             provider = "claude"
             model = "claude-3-5-sonnet-20241022"
-            api_key = os.getenv("ANTHROPIC_API_KEY")
+            api_key = _get_env_key("ANTHROPIC_API_KEY")
             if not api_key:
                 raise ValueError("⚠️ Anthropic Claude API Key is missing. Please add your ANTHROPIC_API_KEY in Settings -> API Keys & Cloud LLMs.")
             base_url = None
         elif "gemini" in model_name_lower:
             provider = "gemini"
-            model = model_name if "gemini" in model_name_lower else "gemini-2.5-flash"
-            api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+            model = model_name if "gemini" in model_name_lower else "gemini-3.5-flash-lite"
+            api_key = _get_env_key("GEMINI_API_KEY", "GOOGLE_API_KEY")
             if not api_key:
                 raise ValueError("⚠️ Google Gemini API Key is missing. Please add your GEMINI_API_KEY in Settings -> API Keys & Cloud LLMs.")
             base_url = None
         elif "grok" in model_name_lower:
             provider = "grok"
             model = "grok-beta"
-            api_key = os.getenv("GROK_API_KEY") or os.getenv("XAI_API_KEY")
+            api_key = _get_env_key("GROK_API_KEY", "XAI_API_KEY")
             if not api_key:
                 raise ValueError("⚠️ xAI Grok API Key is missing. Please add your GROK_API_KEY in Settings -> API Keys & Cloud LLMs.")
             base_url = "https://api.x.ai/v1"
         elif "groq" in model_name_lower or "llama-3.3" in model_name_lower or "llama-3.1" in model_name_lower or "mixtral" in model_name_lower or "gemma2" in model_name_lower:
             provider = "groq"
             model = model_name if ("llama-" in model_name_lower or "mixtral" in model_name_lower or "gemma" in model_name_lower) else "llama-3.3-70b-versatile"
-            api_key = os.getenv("GROQ_API_KEY")
+            api_key = _get_env_key("GROQ_API_KEY")
             if not api_key:
                 raise ValueError("⚠️ Groq API Key is missing. Please add your GROQ_API_KEY in Settings -> API Keys & Cloud LLMs.")
             base_url = "https://api.groq.com/openai/v1"

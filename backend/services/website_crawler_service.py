@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
 from urllib.robotparser import RobotFileParser
 from datetime import datetime
+from backend.utils.datetime_utils import ist_now
 from uuid import uuid4
 
 from backend.settings import settings
@@ -204,7 +205,7 @@ class WebsiteCrawlerService:
                     "breadcrumb": breadcrumb,
                     "headings": headings_structure,
                     "content": combined_content,
-                    "last_crawled": datetime.utcnow().isoformat()
+                    "last_crawled": datetime.ist_now().isoformat()
                 }
 
                 # Save raw JSON inside raw_pages/
@@ -256,8 +257,8 @@ class WebsiteCrawlerService:
                             "source": website.root_url,
                             "doc_id": website_id,
                             "chunk_index": total_chunks,
-                            "timestamp": datetime.utcnow().isoformat(),
-                            "crawl_date": datetime.utcnow().isoformat()
+                            "timestamp": datetime.ist_now().isoformat(),
+                            "crawl_date": datetime.ist_now().isoformat()
                         })
                         total_chunks += 1
 
@@ -366,7 +367,7 @@ class WebsiteCrawlerService:
 
         # 7. Finalize status
         website.status = "success"
-        website.last_crawled_at = datetime.utcnow()
+        website.last_crawled_at = ist_now()
         db.commit()
         db.close()
     @classmethod
@@ -662,8 +663,8 @@ class WebsiteCrawlerService:
                             "source": website.root_url,
                             "doc_id": website_id,
                             "chunk_index": total_chunks,
-                            "timestamp": datetime.utcnow().isoformat(),
-                            "crawl_date": datetime.utcnow().isoformat()
+                            "timestamp": ist_now().isoformat(),
+                            "crawl_date": ist_now().isoformat()
                         })
                         total_chunks += 1
 
@@ -779,6 +780,6 @@ class WebsiteCrawlerService:
 
         # Finalize status
         website.status = "success"
-        website.last_crawled_at = datetime.utcnow()
+        website.last_crawled_at = ist_now()
         db.commit()
         db.close()

@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from pydantic import BaseModel, Field
-
+from backend.utils.datetime_utils import ist_now
 
 class KnowledgeHealth(BaseModel):
     """
@@ -41,5 +41,5 @@ class KnowledgeHealth(BaseModel):
     )
 
     calculated_at: datetime = Field(
-        default_factory=datetime.utcnow
+        default_factory=ist_now
     )

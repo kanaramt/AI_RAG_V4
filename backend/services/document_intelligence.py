@@ -35,10 +35,13 @@ class DocumentIntelligence:
     DOCUMENT_EXTENSIONS = {
         ".pdf",
         ".docx",
+        ".doc",
         ".txt",
         ".csv",
         ".xlsx",
+        ".xls",
         ".pptx",
+        ".ppt",
         ".json",
     }
 

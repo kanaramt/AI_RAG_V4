@@ -98,8 +98,28 @@ async def delete_document(doc_id: str, memory = Depends(get_memory)):
         except Exception as e:
             print(f"Error deleting local file {file_path}: {e}")
 
-    # 3. Delete registry from SQLite
+    # 3. Delete registry from SQLite Memory
     memory.delete_document(doc_id)
+
+    # 4. Delete registry from SQLAlchemy database
+    try:
+        from backend.database.session import SessionLocal
+        from backend.database.models.document_model import DocumentModel
+        db_session = SessionLocal()
+        db_session.query(DocumentModel).filter(DocumentModel.document_id == doc_id).delete()
+        db_session.commit()
+        db_session.close()
+    except Exception as e:
+        print(f"Error deleting document {doc_id} registry from SQL: {e}")
+
+    # 5. Trigger KB Metadata Rebuild
+    try:
+        from backend.services.kb_metadata_service import KBMetadataService
+        import asyncio
+        asyncio.create_task(KBMetadataService.rebuild_metadata())
+    except Exception as e:
+        print(f"Error scheduling KB metadata rebuild: {e}")
+
     return {"status": "success"}
 
 
@@ -185,15 +205,25 @@ async def delete_all_documents(
         # Clear knowledge asset catalog & crawled websites registry
         from backend.database.models.knowledge_asset import KnowledgeAssetModel
         from backend.database.models.website_ingestion import CrawledWebsiteModel
+        from backend.database.models.document_model import DocumentModel
         
         # Delete everything
         db.query(KnowledgeAssetModel).delete()
         db.query(CrawledWebsiteModel).delete()
+        db.query(DocumentModel).delete()
         db.commit()
-        print("Purged catalog and website database tables successfully.")
+        print("Purged catalog, website, and document database tables successfully.")
     except Exception as e:
         db.rollback()
         print(f"Error clearing database tables: {e}")
+
+    # Rebuild KB Metadata Summary
+    try:
+        from backend.services.kb_metadata_service import KBMetadataService
+        import asyncio
+        asyncio.create_task(KBMetadataService.rebuild_metadata())
+    except Exception as e:
+        print(f"Error scheduling KB metadata rebuild: {e}")
 
     return {"status": "success", "message": "All documents, vector embeddings, local files, and crawler registries deleted successfully."}
 

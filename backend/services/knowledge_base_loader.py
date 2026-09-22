@@ -20,8 +20,11 @@ class KnowledgeBaseLoader:
     SUPPORTED_EXTENSIONS = {
         ".pdf",
         ".docx",
+        ".doc",
         ".pptx",
+        ".ppt",
         ".xlsx",
+        ".xls",
         ".csv",
         ".txt",
         ".json",

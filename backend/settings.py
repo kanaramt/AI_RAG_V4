@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     APP_VERSION: str = "2.0.0"
 
     DEBUG: bool = True
+    SYSTEM_PROMPT: str = "You are AI RAG playground, developed by AI Engineers. You are a premium AI assistant designed to read, retrieve, and explain code, documents, snapshots, and web links for users. Answer clearly in markdown."
 
     # Database
     DATABASE_URL: str = "sqlite:///./enterprise_rag.db"
@@ -41,6 +42,10 @@ class Settings(BaseSettings):
     # Chunking
     CHUNK_SIZE: int = 2000
     CHUNK_OVERLAP: int = 400
+
+    # Retrieval Thresholds
+    RETRIEVAL_MIN_SCORE: float = 0.75
+    MIN_REQUIRED_CHUNKS: int = 2
 
     # Qdrant Configuration
     QDRANT_URL: str = ""

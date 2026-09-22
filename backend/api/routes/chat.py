@@ -1,6 +1,7 @@
 import time
 import re
 import base64
+import json
 from typing import List, Dict, Any
 from fastapi import APIRouter, HTTPException, Depends
 
@@ -268,6 +269,7 @@ async def post_message(
     memory = Depends(get_memory),
     retrieval_service: RetrievalService = Depends(get_retrieval_service)
 ):
+    start_time = time.time()
     chat = memory.get_conversation(chat_id)
     if not chat:
         raise HTTPException(status_code=404, detail="Chat not found")
@@ -277,36 +279,171 @@ async def post_message(
     
     # Pipeline trace — collects each processing step for the frontend panel
     pipeline_trace = []
+    # 1. Query Classification (Rule-based to prevent semantic latency/errors)
+    query_clean = re.sub(r'[^\w\s]', '', query.lower()).strip()
     
-    # 1. Query Classification
-    intent = classify_query(query, data.attachments)
-    print(f"[RAG Router] Classified Intent: {intent}")
+    is_greeting = query_clean in [
+        "hi", "hello", "hey", "good morning", "good evening", "good afternoon", 
+        "whats up", "howdy", "greetings", "thanks", "thank you", "okay", "ok", 
+        "got it", "understood", "great", "awesome", "perfect"
+    ]
+    
+    # Robust help and capability request checking
+    help_keywords = [
+        "how can you help", "what can you do", "what are your capabilities", 
+        "what do you do", "who are you", "how to use", "what is this app", 
+        "what is this assistant", "what topics do you cover", "what topics are covered", 
+        "what is this knowledge base about", "what is this kb about", 
+        "what documentation do you have", "what documents do you have",
+        "what files do you have"
+    ]
+    query_clean_no_spaces = query_clean.replace(" ", "")
+    is_help_request = any(kw in query_clean for kw in help_keywords) or \
+                      "howcanyouhelp" in query_clean_no_spaces or \
+                      "whatcanyoudo" in query_clean_no_spaces or \
+                      "whatisthiskb" in query_clean_no_spaces or \
+                      "whatareyourcapabilities" in query_clean_no_spaces
+    
+    if not query.strip():
+        detected_intent = "GREETING"
+    elif data.attachments:
+        detected_intent = "KNOWLEDGE_QUERY"
+    elif is_help_request:
+        detected_intent = "HELP_REQUEST"
+    elif is_greeting:
+        detected_intent = "GREETING"
+    else:
+        detected_intent = "KNOWLEDGE_QUERY"
+
+    print(f"[RAG Router] Classified Intent: {detected_intent}")
     pipeline_trace.append({
         "step": 1,
         "label": "Query Classification",
-        "detail": f"Intent detected: {intent}",
+        "detail": f"Intent detected: {detected_intent}",
         "status": "done"
     })
 
-    # Immediate responses for unsafe or ambiguous inputs to keep latency low
-    if intent == "UNSAFE_REQUEST":
-        memory.add_message(conversation_id=chat_id, sender="user", text=query, attachments=data.attachments)
-        return memory.add_message(
-            conversation_id=chat_id,
-            sender="assistant",
-            text="I'm sorry, but I cannot assist with unsafe or secure-bypass queries.",
-            citations=[]
-        )
-    elif intent == "AMBIGUOUS_REQUEST":
-        memory.add_message(conversation_id=chat_id, sender="user", text=query, attachments=data.attachments)
-        return memory.add_message(
-            conversation_id=chat_id,
-            sender="assistant",
-            text="Could you please clarify your question or specify the details?",
-            citations=[]
-        )
+    # --- ROUTE 1: DYNAMIC HELP REQUEST ---
+    if detected_intent == "HELP_REQUEST":
+        # Resolve UI system prompt
+        system_instruction = data.system_prompt
+        if not system_instruction:
+            sp_file = settings.PROJECT_ROOT / "backend" / "data" / "system_prompt.txt"
+            if sp_file.exists():
+                try:
+                    with open(sp_file, "r", encoding="utf-8") as f:
+                        system_instruction = f.read()
+                except Exception:
+                    pass
+        if not system_instruction:
+            system_instruction = os.getenv("SYSTEM_PROMPT") or settings.SYSTEM_PROMPT
 
-    # 3. Dynamic Real-Time URL Extraction & Live Web Browsing
+        # List all files loaded in the registry to build dynamic capability context
+        docs = memory.list_documents()
+        doc_names = [d["name"] for d in docs] if docs else []
+        kb_context = f"Indexed Documents in the Knowledge Base:\n" + ("\n".join(f"- {name}" for name in doc_names) if doc_names else "- No documents indexed yet.")
+        
+        messages = [{"role": "system", "content": system_instruction}]
+        for msg in history[-6:]:
+            role = "user" if msg['sender'] == 'user' else "assistant"
+            messages.append({"role": role, "content": msg['text']})
+            
+        user_content = f"Context: This is a capability query. Here are the active files in the knowledge base:\n{kb_context}\n\nUser Question: {query}"
+        messages.append({"role": "user", "content": user_content})
+        
+        from backend.engines.generation.generation_engine import GenerationEngine
+        generation_engine = GenerationEngine()
+        
+        try:
+            response_text = await generation_engine.generate(
+                model=data.model,
+                messages=messages,
+                temperature=0.4,
+            )
+            # Dynamic strip for prompt leakage
+            leakage_phrases = [
+                "I am a strict Enterprise Knowledge Base Assistant.",
+                "Based on retrieved chunks.",
+                "According to compressed context.",
+                "Based on internal instructions.",
+                "Based on the provided information",
+                "According to retrieved documents",
+                "According to the provided documents",
+                "Based on the retrieved context",
+                "Based on the context provided",
+                "Based on the retrieved documents"
+            ]
+            for phrase in leakage_phrases:
+                response_text = re.sub(re.escape(phrase) + r"\,?\s*", "", response_text, flags=re.IGNORECASE)
+            response_text = response_text.strip()
+            if response_text and response_text[0].islower():
+                response_text = response_text[0].upper() + response_text[1:]
+        except Exception as e:
+            response_text = f"I am a knowledge base assistant. I can help answer questions using the documents loaded in the database: {', '.join(doc_names) if doc_names else 'No documents loaded yet.'}"
+
+        memory.add_message(conversation_id=chat_id, sender="user", text=query, attachments=data.attachments)
+        assistant_msg = memory.add_message(
+            conversation_id=chat_id,
+            sender="assistant",
+            text=response_text,
+            citations=[]
+        )
+        
+        # Log decision path
+        print("\n" + "="*50)
+        print("--- STRICT RAG DEBUG LOG ---")
+        print(f"User Question: '{query}'")
+        print(f"Scope Detection Result: 'HELP_REQUEST'")
+        print(f"Intent Type: 'HELP_REQUEST'")
+        print(f"Retrieved Chunk Count: 0")
+        print(f"Top Score: 0.0000")
+        print(f"Average Score: 0.0000")
+        print(f"Relevant Chunk Count: 0")
+        print(f"Answerability Result: N/A")
+        print(f"LLM Invoked (Yes/No): Yes")
+        print(f"Final Response Path: Help Request -> Dynamic LLM-generated response based on KB registry")
+        print("="*50 + "\n")
+        
+        return assistant_msg
+
+    # --- ROUTE 2: GREETING & SMALL_TALK INTENT ---
+    if detected_intent == "GREETING":
+        if query_clean in ["thanks", "thank you", "great", "awesome", "perfect"]:
+            response_text = "You're welcome! Let me know if you need anything else."
+        elif query_clean in ["okay", "ok", "got it", "understood"]:
+            response_text = "Understood. Feel free to ask any other questions."
+        else:
+            response_text = (
+                "Hello! I am your knowledge base assistant.\n\n"
+                "I can help answer questions using information available in the current knowledge base."
+            )
+            
+        memory.add_message(conversation_id=chat_id, sender="user", text=query, attachments=data.attachments)
+        assistant_msg = memory.add_message(
+            conversation_id=chat_id,
+            sender="assistant",
+            text=response_text,
+            citations=[]
+        )
+        
+        # Log decision path
+        print("\n" + "="*50)
+        print("--- STRICT RAG DEBUG LOG ---")
+        print(f"User Question: '{query}'")
+        print(f"Scope Detection Result: 'GREETING'")
+        print(f"Intent Type: 'GREETING'")
+        print(f"Retrieved Chunk Count: 0")
+        print(f"Top Score: 0.0000")
+        print(f"Average Score: 0.0000")
+        print(f"Relevant Chunk Count: 0")
+        print(f"Answerability Result: N/A")
+        print(f"LLM Invoked (Yes/No): No")
+        print(f"Final Response Path: Greeting / Small Talk -> Predefined Response")
+        print("="*50 + "\n")
+        
+        return assistant_msg
+
+    # --- ROUTE 3: KNOWLEDGE_QUERY INTENT (Retrieval + Validation + Generation) ---
     url_pattern = r'https?://[^\s>]+'
     urls = re.findall(url_pattern, query)
     url_attached_parts = []
@@ -343,7 +480,7 @@ async def post_message(
             except Exception as web_err:
                 print(f"[Chat Pipeline] Error live browsing URL {clean_url}: {web_err}")
 
-    # 4. Save User Message
+    # Save User Message
     user_msg = memory.add_message(
         conversation_id=chat_id,
         sender="user",
@@ -351,10 +488,9 @@ async def post_message(
         attachments=data.attachments
     )
 
-    # 5. Extract and Auto-Ingest/Embed All Frontend Attachments into Vector Database
+    # Extract Frontend Attachments
     attachment_parts = []
     attachment_parts.extend(url_attached_parts)
-    start_time = time.time()
     
     for attach in data.attachments:
         extracted_text = await extract_attachment_content(attach)
@@ -364,7 +500,6 @@ async def post_message(
                 f"{extracted_text.strip()}\n"
                 f"====================================="
             )
-            # Add explicit citation for the UI to show the attached document was read
             citations.append({
                 "id": attach.get('id', str(time.time())),
                 "name": attach.get('name', 'Attached Document'),
@@ -373,7 +508,7 @@ async def post_message(
                 "snippet": extracted_text.strip()[:300] + "..."
             })
             
-            # Auto-convert & embed attached/pasted file into Vector Database & Memory Registry
+            # Auto-ingest into Knowledge Base
             try:
                 import asyncio
                 asyncio.create_task(
@@ -383,234 +518,262 @@ async def post_message(
                         memory=memory
                     )
                 )
-                print(f"✅ Auto-ingested attached file '{attach.get('name')}' into Vector Store & Knowledge Base (Background Task)!")
             except Exception as ing_err:
                 print(f"Warning: Could not auto-ingest attachment '{attach.get('name')}': {ing_err}")
 
-    # 6. Retrieve Document Context (RAG)
     retrieved_context_str = ""
-    
-    # Determine if we should query the vector knowledge base.
-    NO_RETRIEVAL_INTENTS = {
-        "GREETING", "SMALL_TALK", "CONVERSATIONAL", "UNSAFE_REQUEST",
-        "IDENTITY_QUESTIONS", "AMBIGUOUS_REQUEST"
-    }
     has_attachments = len(attachment_parts) > 0
-    
-    # Retrieve from vector database ONLY if: intent is knowledge-seeking AND user has NO direct attachments.
-    # (When user attaches a file/snapshot, the attached file IS the primary context!)
-    should_retrieve = (intent not in NO_RETRIEVAL_INTENTS) and not has_attachments
-    
-    if should_retrieve:
+    should_retrieve = True
+
+    rewritten_query = query
+    if history:
+        try:
+            history_str = ""
+            for msg in history[-5:]:
+                sender = "User" if msg['sender'] == 'user' else "Assistant"
+                history_str += f"{sender}: {msg['text']}\n"
+            
+            rewrite_messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a search query optimizer. Analyze the conversation history and the latest user query, "
+                        "and generate a standalone search query optimized for vector database retrieval.\n"
+                        "Instructions:\n"
+                        "1. Identify the core user intent, goal, and the active conversational topic from the history.\n"
+                        "2. Resolve any relative references, pronouns, continuation requests, or short follow-ups (e.g. 'next', 'roadmap', 'more details', 'guide me') by expanding them with the relevant topic context (e.g. 'n8n nodes' or 'Hypergene data integration').\n"
+                        "3. Keep the output as a concise search query (combining key terms and search phrases) to retrieve high-quality matches from the knowledge base.\n"
+                        "4. Output ONLY the optimized query text. Do not add explanations, conversational filler, or introductory notes."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": f"Conversation History:\n{history_str}\nFollow-up Query: {query}\n\nOptimized Search Query:"
+                }
+            ]
+            from backend.engines.generation.generation_engine import GenerationEngine
+            generation_engine = GenerationEngine()
+            
+            model_name = data.model
+            rewritten = await generation_engine.generate(
+                model=model_name,
+                messages=rewrite_messages,
+                temperature=0.0
+            )
+            rewritten_query = rewritten.strip()
+            print(f"[Query Rewriter] Rewrote '{query}' -> '{rewritten_query}'")
+        except Exception as e:
+            print(f"[Query Rewriter] Error rewriting query: {e}")
+
+    try:
         req = RetrievalRequest(
-            query=query,
+            query=rewritten_query,
             top_k=data.settings.get('topK', 3),
             filters={}
         )
-        # Step 2: Query rewriting
         pipeline_trace.append({
             "step": 2,
             "label": "Query Rewriting",
-            "detail": f"Rewriting prompt for better semantic retrieval...",
+            "detail": f"Rewrote query to: '{rewritten_query}'",
             "status": "done"
         })
-        # Step 3: Embedding generation
+        
+        # Embedding preview
         try:
             from backend.services.embedding_service import EmbeddingService
             _emb_preview = EmbeddingService().generate_embedding(query)
             emb_dims = len(_emb_preview) if _emb_preview else 0
-            emb_snippet = str([round(v, 4) for v in _emb_preview[:6]]) + (" ..." if emb_dims > 6 else "")
             pipeline_trace.append({
                 "step": 3,
                 "label": "Embedding Generation",
-                "detail": f"Query converted to {emb_dims}-dim vector embedding: {emb_snippet}",
+                "detail": f"Query converted to {emb_dims}-dim vector embedding.",
                 "status": "done"
             })
-        except Exception as emb_err:
-            pipeline_trace.append({
-                "step": 3,
-                "label": "Embedding Generation",
-                "detail": f"Embedding generated (dim unknown): {emb_err}",
-                "status": "done"
-            })
-        # Step 4: Semantic + Keyword Search
+        except Exception:
+            pass
+
         pipeline_trace.append({
             "step": 4,
             "label": "Semantic & Keyword Search",
-            "detail": f"Running dense (semantic) + sparse (keyword/BM25) hybrid retrieval with top_k={data.settings.get('topK', 3)}...",
+            "detail": f"Running dense + sparse retrieval...",
             "status": "running"
         })
-        try:
-            response_retrieval, context_str = await retrieval_service.retrieve(req)
-            retrieved_context_str = context_str
-            num_docs = len(response_retrieval.documents)
-            # Update step 4 detail with retrieval results
-            pipeline_trace[-1]["detail"] = f"Retrieved {num_docs} document chunk(s) via hybrid search (dense + BM25 fusion)"
-            pipeline_trace[-1]["status"] = "done"
+        response_retrieval, context_str = await retrieval_service.retrieve(req)
+        retrieved_context_str = context_str
+        num_docs = len(response_retrieval.documents)
+        pipeline_trace[-1]["detail"] = f"Retrieved {num_docs} document chunk(s)"
+        pipeline_trace[-1]["status"] = "done"
 
-            # STRICT CAP: Only top 3 chunks are shown in the UI as citations.
-            # The full context_str (used by the LLM) is already capped at top_k by the reranker.
-            # Snippet is truncated to ~150 chars (≈2 lines) — display only, does NOT affect LLM input.
-            MAX_CITATIONS = 3
-            SNIPPET_MAX_CHARS = 150  # ~2 display lines; purely for UI card preview
-            for doc in response_retrieval.documents[:MAX_CITATIONS]:
-                raw_snippet = doc.text or ""
-                display_snippet = raw_snippet[:SNIPPET_MAX_CHARS] + ("..." if len(raw_snippet) > SNIPPET_MAX_CHARS else "")
-                citations.append({
-                    "id": doc.id,
-                    "name": doc.source or "Database Vector Store",
-                    "source": doc.source or "Database Vector Store",
-                    "score": doc.score,
-                    # Snippet is shortened for UI card only — LLM receives full text via context_str
-                    "snippet": display_snippet
-                })
-            # Step 5: Context assembly preview
-            context_preview = (context_str[:200] + " ...") if context_str and len(context_str) > 200 else (context_str or "(empty)")
-            pipeline_trace.append({
-                "step": 5,
-                "label": "Context Assembly",
-                "detail": f"[Retrieved Context Snippet]: {context_preview}",
-                "status": "done"
+        # RAG Threshold Variables
+        import os
+        min_score = float(os.getenv("RETRIEVAL_MIN_SCORE", os.getenv("RETRIEVER_SIMILARITY", str(settings.RETRIEVAL_MIN_SCORE))))
+        min_chunks = int(os.getenv("MIN_REQUIRED_CHUNKS", str(settings.MIN_REQUIRED_CHUNKS)))
+        
+        best_score = 0.0
+        average_score = 0.0
+        if response_retrieval.documents:
+            best_score = max(doc.score for doc in response_retrieval.documents)
+            average_score = sum(doc.score for doc in response_retrieval.documents) / len(response_retrieval.documents)
+            
+        relevant_chunks = [
+            doc for doc in response_retrieval.documents
+            if doc.score >= min_score
+        ]
+
+        # Step 6: If retrieval returns weak results (or no docs), attempt query expansion / refinement
+        if (not response_retrieval.documents or best_score < min_score) and not has_attachments:
+            print(f"[Retrieval Refinement] Initial search returned weak results (Best Score: {best_score:.4f} < Min Score: {min_score}). Attempting query expansion...")
+            try:
+                refine_prompt = [
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are a search query expansion assistant. Given a user query and a conversation history, "
+                            "generate exactly 3 alternative, simplified search phrases to find relevant documentation in a vector database.\n"
+                            "- Focus on alternate keywords, synonyms, and variations of the core topic.\n"
+                            "- Do not explain, return ONLY a valid JSON array of 3 strings."
+                        )
+                    },
+                    {
+                        "role": "user",
+                        "content": f"User Query: {query}\nHistory:\n{history_str if history else 'None'}\n\nJSON Output:"
+                    }
+                ]
+                print("[Retrieval Refinement] Generating alternate queries with LLM...")
+                t_ref_start = time.time()
+                refine_res = await generation_engine.generate(
+                    model=data.model,
+                    messages=refine_prompt,
+                    temperature=0.0
+                )
+                print(f"[Retrieval Refinement] LLM call completed in {time.time() - t_ref_start:.2f} seconds. Result: '{refine_res}'")
+                
+                # Parse JSON array of alternative queries
+                alt_queries = []
+                try:
+                    clean_res = refine_res.strip()
+                    if clean_res.startswith("```"):
+                        clean_res = clean_res.split("```")[1]
+                        if clean_res.startswith("json"):
+                            clean_res = clean_res[4:]
+                    alt_queries = json.loads(clean_res.strip())
+                except Exception as parse_err:
+                    print(f"[Retrieval Refinement] JSON parse error: {parse_err}. Extracting strings.")
+                    alt_queries = re.findall(r'"([^"]+)"', refine_res)
+                
+                print(f"[Retrieval Refinement] Generated alternate queries: {alt_queries}")
+                
+                # Fetch docs for each query and combine
+                combined_docs = list(response_retrieval.documents)
+                seen_ids = {doc.id for doc in combined_docs}
+                
+                import asyncio
+                from backend.services.retrieval.strategies.hybrid_strategy import HybridStrategy
+                hybrid_strategy = HybridStrategy()
+                tasks = [
+                    hybrid_strategy.retrieve(RetrievalRequest(
+                        query=alt_q,
+                        top_k=data.settings.get('topK', 3),
+                        filters={}
+                    ))
+                    for alt_q in alt_queries[:3]
+                ]
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+                for res in results:
+                    if isinstance(res, Exception) or not res:
+                        continue
+                    alt_resp = res[0]
+                    for doc in alt_resp.documents:
+                        if doc.id not in seen_ids:
+                            combined_docs.append(doc)
+                            seen_ids.add(doc.id)
+                
+                # Re-sort combined documents by score descending
+                combined_docs.sort(key=lambda d: d.score, reverse=True)
+                response_retrieval.documents = combined_docs
+                
+                # Update best score and relevant chunks
+                if response_retrieval.documents:
+                    best_score = max(doc.score for doc in response_retrieval.documents)
+                    average_score = sum(doc.score for doc in response_retrieval.documents) / len(response_retrieval.documents)
+                relevant_chunks = [
+                    doc for doc in response_retrieval.documents
+                    if doc.score >= min_score
+                ]
+                # Rebuild context string
+                from backend.services.retrieval.context_builder import ContextBuilder
+                retrieved_context_str = ContextBuilder.build(response_retrieval.documents)
+                num_docs = len(response_retrieval.documents)
+                print(f"[Retrieval Refinement] Completed refinement. Combined Docs Count: {num_docs}, New Best Score: {best_score:.4f}, Relevant: {len(relevant_chunks)}")
+            except Exception as ref_err:
+                print(f"[Retrieval Refinement] Error during expansion: {ref_err}")
+
+        # Post-retrieval validation check: if no relevant context can be found after expansion, fall back
+        if (not response_retrieval.documents or len(relevant_chunks) == 0) and not has_attachments:
+            fallback_msg = "I could not find information about this in the knowledge base."
+            return memory.add_message(
+                conversation_id=chat_id,
+                sender="assistant",
+                text=fallback_msg,
+                citations=[]
+            )
+
+        # Citations cap at 3
+        MAX_CITATIONS = 3
+        SNIPPET_MAX_CHARS = 150
+        for doc in response_retrieval.documents[:MAX_CITATIONS]:
+            raw_snippet = doc.text or ""
+            display_snippet = raw_snippet[:SNIPPET_MAX_CHARS] + ("..." if len(raw_snippet) > SNIPPET_MAX_CHARS else "")
+            citations.append({
+                "id": doc.id,
+                "name": doc.source or "Database Vector Store",
+                "source": doc.source or "Database Vector Store",
+                "score": doc.score,
+                "snippet": display_snippet
             })
-        except Exception as e:
-            pipeline_trace[-1]["status"] = "error"
-            pipeline_trace[-1]["detail"] = f"Retrieval error: {e}"
-            print(f"[Retrieval Error] Failed to retrieve context: {e}")
-    else:
+            
         pipeline_trace.append({
-            "step": 2,
-            "label": "Retrieval Skipped",
-            "detail": f"No vector retrieval needed for intent: {intent}" + (" (direct attachment context used)" if has_attachments else ""),
-            "status": "skipped"
+            "step": 5,
+            "label": "Context Assembly",
+            "detail": "Context assembled successfully",
+            "status": "done"
         })
 
-    # Strict Grounding Check: If query requires vector DB retrieval but no matching document chunks exist
-    if should_retrieve and not retrieved_context_str.strip() and intent not in {"GREETING", "SMALL_TALK", "IDENTITY_QUESTIONS"}:
-        out_of_knowledge_response = (
-            "I am sorry, but the requested information is not available in the internal vector database knowledge base documents.\n\n"
-            "To answer questions outside the internal knowledge base, please select **'Google / Web Search'** from the search mode dropdown."
-        )
-        assistant_msg = memory.add_message(
-            conversation_id=chat_id,
-            sender="assistant",
-            text=out_of_knowledge_response,
-            citations=[]
-        )
-        return assistant_msg
-
-    # 7. Long-Term Memory Recall (dense search in past dialogues)
-    recalled_memory_str = ""
-    try:
-        from backend.services.vector_store.qdrant_service import QdrantService
-        from backend.services.embedding_service import EmbeddingService
-        
-        qdrant_memory = QdrantService(collection_name="long_term_memory")
-        query_emb = EmbeddingService().generate_embedding(query)
-        mem_results = qdrant_memory.search_dense(query_emb, top_k=2)
-        
-        recalled_snippets = []
-        for point in mem_results:
-            if point.score > 0.40: # Cosine similarity threshold for memory matches
-                recalled_snippets.append(point.payload.get("text", ""))
-        if recalled_snippets:
-            recalled_memory_str = "\n[Recalled Past Conversations (Long Term Memory)]:\n" + "\n\n".join(recalled_snippets) + "\n"
-            print(f"[Memory Recalled] Found matching dialogues.")
     except Exception as e:
-        print(f"Error querying long term memory: {e}")
+        print(f"[Retrieval Error] Failed to retrieve context: {e}")
 
-    # 8. Setup System Prompt Instructions
-    system_instruction = data.system_prompt or "You are a premium enterprise assistant."
-    
-    if urls or url_attached_parts:
-        system_instruction = (
-            "You are an AI Web Search & Live Page Analysis Agent. "
-            "Real-time webpage content has been fetched directly from the live URL(s) provided in the prompt. "
-            "Use the extracted webpage text to answer the user's question completely, accurately, and in detail. "
-            "You have full live internet browsing and webpage extraction capabilities enabled. "
-            "Never claim that you lack internet access or cannot fetch live web pages."
-        )
-    elif intent == "GREETING":
-        system_instruction = (
-            "You are an intelligent, helpful AI assistant. "
-            "The user is greeting you (e.g. 'hi', 'hello', 'hey', 'good morning'). "
-            "Respond warmly, politely, and intelligently. "
-            "IMPORTANT: Keep your response short, brief, and concise (1-2 sentences maximum)."
-        )
-    elif intent == "SMALL_TALK":
-        system_instruction = "You are AI RAG playground. Provide a concise answer (maximum 4-5 lines). Do not search databases."
-    elif intent in {"TECHNICAL_KNOWLEDGE", "SIMPLE_KNOWLEDGE", "COMPANY_KNOWLEDGE", "DOCUMENT_QUESTION"} or (intent not in {"GREETING", "SMALL_TALK", "IDENTITY_QUESTIONS", "UNSAFE_REQUEST"} and not has_attachments and not urls):
-        system_instruction = (
-            "You are a strict Enterprise Knowledge Base Assistant. "
-            "CRITICAL RULE: You MUST answer the user prompt strictly based ONLY on the provided internal vector database context extracted from documents in backend/data/. "
-            "Do NOT rely on external pre-trained knowledge or make assumptions. "
-            "If the provided internal context does not contain the answer, state: 'I am sorry, but the requested information is not available in the internal knowledge base documents. To answer questions outside the internal knowledge base, please select Google / Web Search from the search mode dropdown.'"
-        )
+    # --- LLM Answer Generation using System Prompt (Precedence: request -> flat-file -> env var -> config default) ---
+    system_instruction = data.system_prompt
+    if not system_instruction:
+        sp_file = settings.PROJECT_ROOT / "backend" / "data" / "system_prompt.txt"
+        if sp_file.exists():
+            try:
+                with open(sp_file, "r", encoding="utf-8") as f:
+                    system_instruction = f.read()
+            except Exception:
+                pass
+    if not system_instruction:
+        system_instruction = os.getenv("SYSTEM_PROMPT") or settings.SYSTEM_PROMPT
 
-    elif intent == "CODING_REQUEST":
-        system_instruction = (
-            "You are an Expert AI Software Engineer and Senior Developer. "
-            "The user is asking for code, programming algorithms, functions, or software engineering explanations. "
-            "ALWAYS PROVIDE COMPLETE, PRODUCTION-READY, WELL-COMMENTED CODE BLOCKS IN PRE-FORMATTED CODE SNIPPETS (```python ... ``` or ```sql ... ``` or ```javascript ... ```). "
-            "Include code implementation, step-by-step logic breakdown, and time/space complexity analysis."
-        )
-    elif intent == "DATABASE_QUERY":
-        system_instruction = (
-            "You are an Expert SQL & Database Architect Agent. "
-            "ALWAYS PROVIDE COMPLETE, OPTIMIZED SQL QUERIES IN PRE-FORMATTED CODE SNIPPETS (```sql ... ```) along with query breakdown and execution explanations."
-        )
-    elif intent == "ANALYTICS_REQUEST":
-        system_instruction = "You are the Data Analyst Agent. Explain trends, KPIs, and generate EDA metrics."
-    elif intent == "VISUAL_ANALYSIS" or has_attachments:
-        system_instruction = "You are an AI Vision & Document Analysis Agent. You are given the extracted content of user-attached files, images, webpage URLs, or pasted snapshots. Carefully read the extracted content and answer the user's question directly and accurately."
-
-    elif intent == "DOCUMENT_QUESTION":
-        system_instruction = "You are an AI Document Reader Agent. Carefully read the provided document content and answer the user's question based on it."
-
-    # Mandatory Structured Response Instructions (ChatGPT/Claude style)
-    STRUCTURED_OUTPUT_INSTRUCTION = (
-        "\n\n[MANDATORY RESPONSE FORMATTING INSTRUCTIONS]:\n"
-        "Always structure your output cleanly and professionally like ChatGPT and Claude.\n"
-        "Apply the following formatting elements as appropriate based on the query requirement:\n"
-        "1. **Executive Briefing**: Start with a clear 1-2 sentence briefing / summary.\n"
-        "2. **Headings & Sub-headings**: Organize distinct sections using clear Markdown Headings (### Section Title).\n"
-        "3. **Structured Points & Lists**: Use bullet points (-) or numbered lists (1., 2.) for details, steps, or itemization.\n"
-        "4. **Tabular Format**: Whenever presenting metrics, parameters, comparisons, or structured data, use Markdown Tables (| Header 1 | Header 2 |).\n"
-        "5. **Canvas & Code Blocks**: Enclose code, queries, equations, or canvas breakdowns in pre-formatted code blocks (```python ... ```).\n"
-    )
-
-    if intent != "GREETING":
-        system_instruction += STRUCTURED_OUTPUT_INSTRUCTION
-
-    # Append retrieved context and long term memories to system prompt ONLY when no direct attachments present
-    if retrieved_context_str and not has_attachments:
-        system_instruction += f"\n\nRetrieved context from database documents:\n{retrieved_context_str}\n"
-    if recalled_memory_str:
-        system_instruction += recalled_memory_str
-
-    # 9. Format message histories
     messages = [{"role": "system", "content": system_instruction}]
-    
-    # Context window: include last 6 message turns
     for msg in history[-6:]:
         role = "user" if msg['sender'] == 'user' else "assistant"
         messages.append({"role": role, "content": msg['text']})
-        
-    # Build current user message - always focus on attachment content when present
+
     from backend.services.generation.prompt_builder import PromptBuilder
     prompt_builder = PromptBuilder()
 
-    # Build user content combining retrieved context or attachment content + user query
     if has_attachments:
         combined_context = "\n\n".join(attachment_parts)
         user_content = prompt_builder.build(query=query, context=combined_context, has_attachments=True)
-    elif should_retrieve and retrieved_context_str:
-        user_content = prompt_builder.build(query=query, context=retrieved_context_str, has_attachments=False)
     else:
-        user_content = query
+        user_content = prompt_builder.build(query=query, context=retrieved_context_str, has_attachments=False)
         
     messages.append({"role": "user", "content": user_content})
 
-    # 10. Generate response
+    from backend.engines.generation.generation_engine import GenerationEngine
+    generation_engine = GenerationEngine()
+    
     response_text = ""
     is_technical_error = False
     llm_step_num = len(pipeline_trace) + 1
@@ -620,9 +783,8 @@ async def post_message(
         "detail": f"Sending assembled context + query to model: {data.model}",
         "status": "running"
     })
+    
     try:
-        generation_engine = GenerationEngine()
-
         response_text = await generation_engine.generate(
             model=data.model,
             messages=messages,
@@ -630,6 +792,42 @@ async def post_message(
         )
         pipeline_trace[-1]["status"] = "done"
         pipeline_trace[-1]["detail"] = f"LLM ({data.model}) generated response successfully"
+        
+        # Clean up any prompt leakage or filler phrases from the output text dynamically
+        leakage_phrases = [
+            "I am a strict Enterprise Knowledge Base Assistant.",
+            "Based on retrieved chunks.",
+            "According to compressed context.",
+            "Based on internal instructions.",
+            "Based on the provided information",
+            "According to retrieved documents",
+            "According to the provided documents",
+            "Based on the retrieved context",
+            "Based on the context provided",
+            "Based on the retrieved documents"
+        ]
+        for phrase in leakage_phrases:
+            response_text = re.sub(re.escape(phrase) + r"\,?\s*", "", response_text, flags=re.IGNORECASE)
+            
+        response_text = response_text.strip()
+        if response_text and response_text[0].islower():
+            response_text = response_text[0].upper() + response_text[1:]
+        
+        # Log decision path
+        print("\n" + "="*50)
+        print("--- STRICT RAG DEBUG LOG ---")
+        print(f"User Question: '{query}'")
+        print(f"Scope Detection Result: 'KNOWLEDGE_QUERY'")
+        print(f"Intent Type: 'KNOWLEDGE_QUERY'")
+        print(f"Retrieved Chunk Count: {num_docs}")
+        print(f"Top Score: {best_score:.4f}")
+        print(f"Average Score: {average_score:.4f}")
+        print(f"Relevant Chunk Count: {len(relevant_chunks)}")
+        print(f"Answerability Result: YES")
+        print(f"LLM Invoked (Yes/No): Yes")
+        print(f"Final Decision Path: KNOWLEDGE_QUERY -> Validated -> Answerability YES -> Synthesized Response")
+        print("="*50 + "\n")
+        
     except Exception as e:
         is_technical_error = True
         pipeline_trace[-1]["status"] = "error"
@@ -747,6 +945,45 @@ async def post_message(
             answer_relevance=a_rel,
             latency_ms=latency_ms
         )
+
+        # Also persist to PostgreSQL evaluation_results table (visible in PGAdmin)
+        try:
+            from uuid import uuid4
+            from backend.database.session import SessionLocal
+            from backend.services.evaluation.evaluation_sql_repository import EvaluationSQLRepository
+            from backend.schemas.evaluation.evaluation_result import EvaluationResult
+
+            confidence_score = round((c_rel + faith + a_rel) / 3.0, 3)
+            sim_score = 0.0
+            if citations:
+                scores = [c.get("score") for c in citations if isinstance(c.get("score"), (int, float))]
+                if scores:
+                    sim_score = round(max(scores), 4)
+
+            eval_result = EvaluationResult(
+                evaluation_id=f"eval-{int(time.time() * 1000)}-{uuid4().hex[:8]}",
+                review_id=chat_id,
+                faithfulness=faith,
+                groundedness=c_rel,
+                answer_relevance=a_rel,
+                answer_correctness=a_rel,
+                context_precision=c_rel,
+                context_recall=faith,
+                citation_accuracy=sim_score,
+                hallucination_score=round(1.0 - faith, 3),
+                semantic_similarity=sim_score,
+                retrieval_score=sim_score,
+                overall_score=confidence_score,
+                evaluated_by=data.model,
+            )
+
+            _eval_db = SessionLocal()
+            try:
+                EvaluationSQLRepository(_eval_db).create(eval_result)
+            finally:
+                _eval_db.close()
+        except Exception as pg_eval_err:
+            print(f"[PG Evaluation Write Error]: {pg_eval_err}")
         eval_step_num = len(pipeline_trace) + 1
         pipeline_trace.append({
             "step": eval_step_num,
@@ -816,6 +1053,7 @@ async def post_message(
             if scores:
                 similarity_score = round(max(scores), 4)
 
+        recalled_memory_str = None
         if recalled_memory_str:
             memory_source = "Long-Term Memory"
         elif history and len(history) > 1:

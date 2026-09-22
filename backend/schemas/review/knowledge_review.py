@@ -12,7 +12,7 @@ from backend.schemas.retrieval.retrieval_metrics import (
 from backend.schemas.retrieval.source_reference import (
     SourceReference,
 )
-
+from backend.utils.datetime_utils import ist_now
 
 class KnowledgeReview(BaseModel):
     """
@@ -50,9 +50,9 @@ class KnowledgeReview(BaseModel):
     status: ReviewStatus = ReviewStatus.PENDING
 
     created_at: datetime = Field(
-        default_factory=datetime.utcnow
+        default_factory=ist_now
     )
 
     updated_at: datetime = Field(
-        default_factory=datetime.utcnow
+        default_factory=ist_now
     )

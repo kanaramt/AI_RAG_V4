@@ -70,6 +70,8 @@ const modelLabels = {
     'claude-3-5-sonnet': 'claude-3-5-sonnet',
     'grok-beta': 'grok-beta (xAI)',
     'llama-3.3-70b-versatile': 'llama-3.3-70b (Groq)',
+    'gemini-3.1-flash-lite': 'gemini-3.1-flash-lite (Gemini)',
+    'gemini-3.5-flash-lite': 'gemini-3.5-flash-lite (Gemini)',
     'gemini-2.5-flash': 'gemini-2.5-flash (Gemini)',
     'gemini-2.0-flash-lite': 'gemini-2.0-flash-lite (Gemini)',
     'gemini-2.5-flash-lite': 'gemini-2.0-flash-lite (Gemini)',
@@ -153,11 +155,8 @@ const PROVIDER_CONFIGS = {
     'gemini': {
         name: 'Google Gemini',
         models: [
-            { id: 'gemini-2.5-flash', label: 'gemini-2.5-flash (Multimodal Fast)' },
-            { id: 'gemini-2.0-flash-lite', label: 'gemini-2.0-flash-lite (Ultra Fast Lite)' },
-            { id: 'gemini-2.0-flash', label: 'gemini-2.0-flash (Next-Gen Multimodal)' },
-            { id: 'gemini-2.5-pro', label: 'gemini-2.5-pro (Reasoning & Code)' },
-            { id: 'gemini-flash-latest', label: 'gemini-flash-latest (Auto Latest Flash)' }
+            { id: 'gemini-3.1-flash-lite', label: 'gemini-3.1-flash-lite' },
+            { id: 'gemini-3.5-flash-lite', label: 'gemini-3.5-flash-lite' }
         ],
         placeholder: 'AIzaSy...',
         link: 'https://aistudio.google.com/app/apikey',

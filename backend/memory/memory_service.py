@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 from uuid import uuid4
 from typing import List, Dict, Any
-
+from backend.services.postgres_chat_sync import PostgresChatSync
 from backend.settings import settings
 
 class MemoryService:
@@ -153,12 +153,25 @@ class MemoryService:
 
     def create_conversation(self, chat_id: str, title: str, model: str) -> Dict[str, Any]:
         cursor = self.conn.cursor()
+
         cursor.execute(
             'INSERT INTO conversations (id, title, model) VALUES (?, ?, ?)',
             (chat_id, title, model)
         )
+
         self.conn.commit()
-        return {'id': chat_id, 'title': title, 'model': model}
+
+        PostgresChatSync.save_conversation(
+            conversation_id=chat_id,
+            title=title,
+            model=model,
+        )
+
+        return {
+            'id': chat_id,
+            'title': title,
+            'model': model,
+        }
 
     def get_conversation(self, chat_id: str) -> Dict[str, Any]:
         cursor = self.conn.cursor()
@@ -171,6 +184,7 @@ class MemoryService:
         cursor.execute('UPDATE conversations SET title = ? WHERE id = ?', (new_title, chat_id))
         self.conn.commit()
         return cursor.rowcount > 0
+
 
     def delete_conversation(self, chat_id: str) -> bool:
         cursor = self.conn.cursor()
@@ -194,6 +208,15 @@ class MemoryService:
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ''', (msg_id, conversation_id, sender, text, attachments_json, citations_json, suggestions_json, metrics_json))
         self.conn.commit()
+
+        PostgresChatSync.save_message(
+            message_id=msg_id,
+            conversation_id=conversation_id,
+            sender=sender,
+            text=text,
+            attachments=attachments,
+            citations=citations,
+        )
         
         return {
             'id': msg_id,
@@ -354,7 +377,27 @@ class MemoryService:
             timetaken_s, similarity_score, llm_model, memory_source,
             files_used, chunks_used, chunk_metadata, search_source
         ))
+
+        print("SQLITE HISTORY SAVED", record_id)
         self.conn.commit()
+
+        PostgresChatSync.save_history_record(
+            record_id=record_id,
+            conversation_id="legacy",
+            timestamp_ist=timestamp_ist,
+            user_prompt=user_prompt,
+            retrieved_response=retrieved_response,
+            response_metrics=response_metrics,
+            similarity_score=similarity_score,
+            llm_model=llm_model,
+            memory_source=memory_source,
+            files_used=files_used,
+            chunks_used=chunks_used,
+            chunk_metadata=chunk_metadata,
+            search_source=search_source,
+        )
+
+
         return {
             "id": record_id,
             "timestamp_ist": timestamp_ist,

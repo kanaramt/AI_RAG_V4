@@ -28,6 +28,9 @@ class SystemSettingsModel(BaseModel):
     similarity: float | None = None
     temperature: float | None = None
     system_prompt: str | None = None
+    retrieval_min_score: float | None = None
+    min_required_chunks: int | None = None
+
 
 
 def _infer_provider(model: str) -> str:
@@ -113,9 +116,19 @@ async def get_centralized_settings():
         return k[:4] + "..." + k[-4:]
 
     top_k = int(os.getenv("RETRIEVER_TOP_K", "3"))
-    similarity = float(os.getenv("RETRIEVER_SIMILARITY", "0.70"))
+    similarity = float(os.getenv("RETRIEVER_SIMILARITY", os.getenv("RETRIEVAL_MIN_SCORE", "0.75")))
+    min_required_chunks = int(os.getenv("MIN_REQUIRED_CHUNKS", "2"))
     temperature = float(os.getenv("LLM_TEMPERATURE", "0.2"))
-    system_prompt = os.getenv("SYSTEM_PROMPT", "You are AI RAG playground, developed by AI Engineers. You are a premium AI assistant designed to read, retrieve, and explain code, documents, snapshots, and web links for users. Answer clearly in markdown.")
+    # Load system prompt from file if present to support max length and multiline without corrupting .env
+    sp_file = settings.PROJECT_ROOT / "backend" / "data" / "system_prompt.txt"
+    if sp_file.exists():
+        try:
+            with open(sp_file, "r", encoding="utf-8") as f:
+                system_prompt = f.read()
+        except Exception:
+            system_prompt = os.getenv("SYSTEM_PROMPT", settings.SYSTEM_PROMPT)
+    else:
+        system_prompt = os.getenv("SYSTEM_PROMPT", settings.SYSTEM_PROMPT)
 
     return JSONResponse(content={
         "status": "success",
@@ -138,10 +151,13 @@ async def get_centralized_settings():
         "retriever_params": {
             "topK": top_k,
             "similarity": similarity,
-            "temperature": temperature
+            "temperature": temperature,
+            "retrieval_min_score": similarity,
+            "min_required_chunks": min_required_chunks
         },
         "system_prompt": system_prompt
     })
+
 
 
 @router.put("")
@@ -205,14 +221,37 @@ async def update_centralized_settings(data: SystemSettingsModel):
     if data.similarity is not None:
         os.environ["RETRIEVER_SIMILARITY"] = str(data.similarity)
         to_update["RETRIEVER_SIMILARITY"] = str(data.similarity)
+        os.environ["RETRIEVAL_MIN_SCORE"] = str(data.similarity)
+        to_update["RETRIEVAL_MIN_SCORE"] = str(data.similarity)
+
+    if data.retrieval_min_score is not None:
+        os.environ["RETRIEVAL_MIN_SCORE"] = str(data.retrieval_min_score)
+        to_update["RETRIEVAL_MIN_SCORE"] = str(data.retrieval_min_score)
+        os.environ["RETRIEVER_SIMILARITY"] = str(data.retrieval_min_score)
+        to_update["RETRIEVER_SIMILARITY"] = str(data.retrieval_min_score)
+
+    if data.min_required_chunks is not None:
+        os.environ["MIN_REQUIRED_CHUNKS"] = str(data.min_required_chunks)
+        to_update["MIN_REQUIRED_CHUNKS"] = str(data.min_required_chunks)
 
     if data.temperature is not None:
         os.environ["LLM_TEMPERATURE"] = str(data.temperature)
         to_update["LLM_TEMPERATURE"] = str(data.temperature)
 
     if data.system_prompt is not None:
+        # Save exact prompt (with newlines/large text) to flat file
+        sp_file = settings.PROJECT_ROOT / "backend" / "data" / "system_prompt.txt"
+        sp_file.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            with open(sp_file, "w", encoding="utf-8") as f:
+                f.write(data.system_prompt)
+        except Exception as e:
+            print(f"[Settings] Error writing system_prompt.txt: {e}")
+            
         os.environ["SYSTEM_PROMPT"] = data.system_prompt
-        to_update["SYSTEM_PROMPT"] = data.system_prompt
+        # Sanitize for .env file (remove newlines to prevent parsing errors)
+        sanitized_prompt = data.system_prompt.replace("\n", " ").replace("\r", "")
+        to_update["SYSTEM_PROMPT"] = sanitized_prompt
 
     if to_update:
         _update_env_file(to_update)

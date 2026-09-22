@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Literal
-
+from backend.utils.datetime_utils import ist_now
 from pydantic import BaseModel, Field
 
 
@@ -33,5 +33,5 @@ class RecommendationResult(BaseModel):
     reason: str = Field(default="")
 
     created_at: datetime = Field(
-        default_factory=datetime.utcnow
+        default_factory=ist_now
     )

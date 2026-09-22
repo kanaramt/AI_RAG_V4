@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 
 from pydantic import BaseModel, Field
-
+from backend.utils.datetime_utils import ist_now
 
 class JobType(str, Enum):
     """
@@ -62,9 +62,9 @@ class Job(BaseModel):
     created_by: str = Field(default="system")
 
     created_at: datetime = Field(
-        default_factory=datetime.utcnow
+        default_factory=ist_now
     )
 
     updated_at: datetime = Field(
-        default_factory=datetime.utcnow
+        default_factory=ist_now
     )

@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 from pydantic import BaseModel, Field
-
+from backend.utils.datetime_utils import ist_now
 
 class AssetStatus(str, Enum):
     """
@@ -77,9 +77,9 @@ class KnowledgeAsset(BaseModel):
     health_score: float = 0.0
 
     created_at: datetime = Field(
-        default_factory=datetime.utcnow
+        default_factory=ist_now
     )
 
     updated_at: datetime = Field(
-        default_factory=datetime.utcnow
+        default_factory=ist_now
     )

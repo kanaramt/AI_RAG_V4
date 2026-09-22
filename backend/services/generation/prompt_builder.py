@@ -42,27 +42,10 @@ Answer
 ---
 """
         else:
-            return f"""You are a strict Enterprise Knowledge Base Assistant.
-
-CRITICAL GROUNDING RULES:
-- You MUST answer the user prompt STRICTLY and EXCLUSIVELY using ONLY the internal vector database document context provided below (extracted from documents in backend/data/).
-- Do NOT use pre-trained external knowledge, general internet knowledge, or invent details not present in the retrieved context.
-- If the user query asks about a topic, location, tool, general knowledge, or concept (e.g. "where is Delhi in India") NOT directly answered in the retrieved internal context below, do NOT answer using pre-trained knowledge.
-- Instead, respond EXACTLY: "I am sorry, but the requested information is not available in the internal knowledge base documents. To answer questions outside the internal knowledge base, please select 'Google / Web Search' from the search mode dropdown."
-
+            return f"""Retrieved Knowledge Context:
 ---
-Retrieved Internal Vector DB Knowledge Context
----
-
 {context}
-
----
-User Question
 ---
 
-{query}
-
----
-Answer
----
+User Question: {query}
 """

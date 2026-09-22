@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-
+from backend.utils.datetime_utils import ist_now
 from pydantic import BaseModel, Field
 
 
@@ -36,9 +36,9 @@ class ApprovalRequest(BaseModel):
     comments: str = Field(default="")
 
     created_at: datetime = Field(
-        default_factory=datetime.utcnow
+        default_factory=ist_now
     )
 
     updated_at: datetime = Field(
-        default_factory=datetime.utcnow
+        default_factory=ist_now
     )

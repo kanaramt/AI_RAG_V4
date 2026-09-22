@@ -4,7 +4,7 @@ from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
-
+from backend.utils.datetime_utils import ist_now
 from backend.database.base import Base
 
 
@@ -71,5 +71,6 @@ class ReviewModel(Base):
     )
 
     created_at: Mapped[DateTime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
+        default=ist_now,
     )

@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 from pathlib import Path
 from uuid import uuid4
 from typing import Dict, Any
+from backend.utils.datetime_utils import ist_now
 
 from backend.settings import settings
 from backend.services.document_chunker import DocumentChunker
@@ -126,7 +127,7 @@ class IngestionService:
                         "chunk_count": len(chunks),
                     },
                     content=text,
-                    created_at=datetime.utcnow(),
+                    created_at=ist_now(),
                 )
             )   
         finally:
@@ -144,6 +145,11 @@ class IngestionService:
             vector_store=settings.VECTOR_STORE,
         )
 
+        # Rebuild KB Metadata Summary
+        from backend.services.kb_metadata_service import KBMetadataService
+        import asyncio
+        asyncio.create_task(KBMetadataService.rebuild_metadata())
+
         return {
             "id": doc_id,
             "filename": file.filename,
@@ -157,7 +163,7 @@ class IngestionService:
         Supports: txt, pdf, csv, docx, xlsx, pptx, png, jpg, jpeg, bmp, tiff, webp
         """
         extension = file_path.suffix.lower()
-        supported = {".txt", ".pdf", ".csv", ".docx", ".xlsx", ".pptx", ".json",
+        supported = {".txt", ".pdf", ".csv", ".docx", ".doc", ".xlsx", ".xls", ".pptx", ".ppt", ".json",
                      ".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".webp"}
         if extension not in supported:
             print(f"Skipping {file_path.name} (unsupported extension: {extension})")
@@ -177,11 +183,11 @@ class IngestionService:
                     self.content_type = "application/pdf"
                 elif ext == ".csv":
                     self.content_type = "text/csv"
-                elif ext == ".docx":
+                elif ext in {".docx", ".doc"}:
                     self.content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                elif ext == ".xlsx":
+                elif ext in {".xlsx", ".xls"}:
                     self.content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                elif ext == ".pptx":
+                elif ext in {".pptx", ".ppt"}:
                     self.content_type = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
                 elif ext in {".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".webp"}:
                     self.content_type = f"image/{ext.lstrip('.')}"
@@ -258,7 +264,7 @@ class IngestionService:
                         "chunk_count": len(chunks),
                     },
                     content=text,
-                    created_at=datetime.utcnow(),
+                    created_at=ist_now(),
                 )
             )
             print("STEP-5 DOCUMENT SAVED")
@@ -273,7 +279,7 @@ class IngestionService:
                         chunk_index=i,
                         content=chunks[i],
                         metadata=metadatas[i],
-                        created_at=datetime.utcnow(),
+                        created_at=ist_now(),
                     )
                     for i in range(len(chunks))
                 ]
@@ -343,6 +349,11 @@ class IngestionService:
             vector_store=settings.VECTOR_STORE,
         )
 
+        # Rebuild KB Metadata Summary
+        from backend.services.kb_metadata_service import KBMetadataService
+        import asyncio
+        asyncio.create_task(KBMetadataService.rebuild_metadata())
+
         print(f"[IngestionService] Successfully ingested '{file_path.name}' -> {len(chunks)} chunks indexed.")
         return {
             "id": doc_id,
@@ -404,6 +415,31 @@ class IngestionService:
         size_str = cls._format_size(len(cleaned_text))
         memory.add_document(doc_id, f"URL: {page_title}", size_str, "text/html", url)
 
+        # Register document metadata in SQLite/SQLAlchemy
+        db = SessionLocal()
+        try:
+            repository = DocumentSQLRepository(db)
+            repository.create(
+                DocumentSchema(
+                    document_id=doc_id,
+                    title=f"URL: {page_title}",
+                    source_type="website",
+                    source_name=url,
+                    metadata={
+                        "url": url,
+                        "chunk_count": len(doc_chunks),
+                    },
+                    content=cleaned_text,
+                    created_at=ist_now(),
+                )
+            )
+        finally:
+            db.close()
+
+        # Rebuild KB Metadata Summary
+        from backend.services.kb_metadata_service import KBMetadataService
+        asyncio.create_task(KBMetadataService.rebuild_metadata())
+
         elapsed_ms = round((time.time() - start_time) * 1000, 2)
         print(f"[IngestionService] Successfully ingested Webpage '{page_title}' ({url}) -> {len(doc_chunks)} chunks in {elapsed_ms}ms")
 
@@ -447,6 +483,31 @@ class IngestionService:
             
             size_str = cls._format_size(len(content))
             memory.add_document(doc_id, title, size_str, "text/plain", f"paste_{doc_id}")
+            
+            # Register document metadata in SQLite/SQLAlchemy
+            db = SessionLocal()
+            try:
+                repository = DocumentSQLRepository(db)
+                repository.create(
+                    DocumentSchema(
+                        document_id=doc_id,
+                        title=title,
+                        source_type="pasted_content",
+                        source_name=title,
+                        metadata={
+                            "chunk_count": len(doc_chunks),
+                        },
+                        content=content,
+                        created_at=ist_now(),
+                    )
+                )
+            finally:
+                db.close()
+
+            # Rebuild KB Metadata Summary
+            from backend.services.kb_metadata_service import KBMetadataService
+            asyncio.create_task(KBMetadataService.rebuild_metadata())
+            
             return True
         except Exception as e:
             print(f"Error indexing pasted content: {e}")

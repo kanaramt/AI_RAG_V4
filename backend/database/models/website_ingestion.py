@@ -1,6 +1,6 @@
 from datetime import datetime
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, Text
-
+from backend.utils.datetime_utils import ist_now
 from backend.database.base import Base
 
 
@@ -66,13 +66,13 @@ class CrawledWebsiteModel(Base):
         nullable=True,
     )
     created_at = Column(
-        DateTime,
-        default=datetime.utcnow,
+        DateTime(timezone=True),
+        default=ist_now,
     )
     updated_at = Column(
-        DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        DateTime(timezone=True),
+        default=ist_now,
+        onupdate=ist_now,
     )
 
 

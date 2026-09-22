@@ -1,5 +1,13 @@
 import os
 import sys
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env into os.environ on startup
+_env_path = Path(__file__).resolve().parent.parent / ".env"
+if _env_path.exists():
+    load_dotenv(_env_path, override=True)
+
 # Force PyTorch and OpenMP to run on a single thread to prevent segmentation faults/crashes in Uvicorn
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"

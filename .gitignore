@@ -98,6 +98,10 @@ backend/data/**
 !backend/data/**/
 !backend/data/**/.gitkeep
 
+# Include KB text files
+!backend/data/*.txt
+!backend/data/text/*.txt
+
 # ----------------------------------------------------------
 # Data Folder (Root)
 # Ignore generated text but keep folder
@@ -135,3 +139,13 @@ test_pdf_extract.py
 # ----------------------------------------------------------
 .agents/
 scratch/
+
+# Temporary / Local Files
+requirements_new.txt
+backend_files.txt
+project_structure.txt
+sop_test.txt
+
+# Generated datasets
+Data/query_dataset/
+Data/kb_metadata.json

@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-
+from backend.utils.datetime_utils import ist_now
 from pydantic import BaseModel, Field
 
 
@@ -44,5 +44,5 @@ class AuditLog(BaseModel):
     message: str = Field(default="")
 
     created_at: datetime = Field(
-        default_factory=datetime.utcnow
+        default_factory=ist_now
     )
