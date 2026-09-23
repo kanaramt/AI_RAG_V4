@@ -108,6 +108,7 @@ Provide a JSON object with exactly the following fields (nothing else, no format
         try:
             engine = GenerationEngine()
             model_name = os.getenv("DEFAULT_CLOUD_MODEL") or os.getenv("LLM_MODEL") or settings.DEFAULT_MODEL
+            print(f"[KBMetadataService] model_name={model_name}")
             response_text = await engine.generate(
                 model=model_name,
                 messages=[{"role": "user", "content": prompt}],
