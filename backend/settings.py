@@ -28,8 +28,8 @@ class Settings(BaseSettings):
     #DEFAULT_MODEL: str = "llama-3.3-70b-versatile"
     LLM_PROVIDER: str = "groq"
     #LLM_MODEL: str = "llama-3.3-70b-versatile"
-    DEFAULT_MODEL: str = "llama-3.3-70b-versatile"
-    LLM_MODEL: str = "llama-3.3-70b-versatile"
+    DEFAULT_MODEL: str = "llama-3.1-8b-instant"
+    LLM_MODEL: str = "llama-3.1-8b-instant"
 
     # Retrieval
     VECTOR_STORE: str = "hybrid"
