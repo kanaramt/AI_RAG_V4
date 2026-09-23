@@ -9,37 +9,41 @@ from database.models.chat_history_record_model import ChatHistoryRecordModel
 class PostgresChatSync:
 
     @staticmethod
-    def save_conversation(
-        conversation_id: str,
-        title: str,
-        model: str,
-    ):
-        db: Session = SessionLocal()
+def save_conversation(
+    conversation_id: str,
+    title: str,
+    model: str,
+):
+    db: Session = SessionLocal()
 
-        try:
-            existing = (
-                db.query(ConversationModel)
-                .filter(
-                    ConversationModel.conversation_id == conversation_id
-                )
-                .first()
+    try:
+        existing = (
+            db.query(ConversationModel)
+            .filter(
+                ConversationModel.conversation_id == conversation_id
             )
+            .first()
+        )
 
-            if existing:
-                return
+        if existing:
+            return
 
-            db.add(
-                ConversationModel(
-                    conversation_id=conversation_id,
-                    title=title,
-                    model=model,
-                )
+        db.add(
+            ConversationModel(
+                conversation_id=conversation_id,
+                title=title,
+                model=model,
             )
+        )
 
-            db.commit()
+        db.commit()
 
-        finally:
-            db.close()
+    except Exception as e:
+        print(f"[POSTGRES CONVERSATION ERROR] {e}")
+        db.rollback()
+
+    finally:
+        db.close()
 
     @staticmethod
     def save_message(
