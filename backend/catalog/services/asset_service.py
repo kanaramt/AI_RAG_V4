@@ -96,7 +96,7 @@ class AssetService:
         asset: KnowledgeAsset,
     ) -> KnowledgeAsset:
 
-        asset.updated_at = ist_now
+        asset.updated_at = ist_now()
 
         return self.repository.update(asset)
 

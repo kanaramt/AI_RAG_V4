@@ -62,7 +62,7 @@ class ApprovalService:
 
                 request.comments = comments
 
-                request.updated_at = ist_now
+                request.updated_at = ist_now()
 
                 return True
 
