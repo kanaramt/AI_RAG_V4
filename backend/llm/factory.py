@@ -62,6 +62,11 @@ class LLMFactory:
         from settings import settings
 
         model_name_lower = model_name.lower()
+        print("=" * 80)
+        print("[LLM FACTORY DEBUG]")
+        print(f"Incoming model_name = {model_name}")
+        print(f"Incoming model_name_lower = {model_name_lower}")
+        print("=" * 80)
         
         if "gpt" in model_name_lower:
             provider = "openai"
@@ -121,4 +126,11 @@ class LLMFactory:
             base_url=base_url,
             temperature=temperature
         )
+
+        print("[LLM FACTORY FINAL]")
+        print(f"Provider = {provider}")
+        print(f"Model = {model}")
+        print(f"Base URL = {base_url}")
+        print(f"API Key Present = {bool(api_key)}")
+        
         return LLMFactory.create(config)
