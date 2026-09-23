@@ -24,13 +24,20 @@ class GenerationEngine:
         Generate a response using the selected LLM.
         """
 
-        print(f"[GENERATION START] model={model}")
-        
-        llm = LLMFactory.get_llm_by_model(
+        print("=" * 80)
+        print(f"[GENERATION DEBUG] Requested model = {model}")
+        print("=" * 80)
+
+        provider = LLMFactory.get_llm_by_model(
             model_name=model,
             temperature=temperature,
         )
 
+        print(f"[DEBUG MODEL RECEIVED] {model}")
+        print(f"[DEBUG PROVIDER] {provider.__class__.__name__}")
+
+        llm = provider
+        print(f"[GENERATION DEBUG] Provider = {type(llm).__name__}")
         print(f"[GENERATION ENGINE] Calling model: {model}")
 
         response = await llm.chat(messages)

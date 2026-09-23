@@ -41,7 +41,10 @@ class GrokProvider(BaseLLMProvider):
         url = f"{self.base_url.rstrip('/')}/chat/completions"
 
         async with httpx.AsyncClient(timeout=60.0) as client:
+            print(f"[GROK] Model={self.model}")
+            print(f"[GROK] Sending request")
             resp = await client.post(url, headers=headers, json=payload)
+            print(f"[GROK] Status={resp.status_code}")
             if resp.status_code != 200:
                 raise RuntimeError(f"Grok API error ({resp.status_code}): {resp.text}")
             data = resp.json()

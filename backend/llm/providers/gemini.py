@@ -72,8 +72,17 @@ class GeminiProvider(BaseLLMProvider):
         if system_instruction:
             payload["systemInstruction"] = system_instruction
 
+        print(f"[GEMINI REST] Calling model={self.model}")
+
         async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(url, params=params, json=payload)
+            resp = await client.post(
+                url,
+                params=params,
+                json=payload
+            )
+
+            print(f"[GEMINI REST] Status Code={resp.status_code}")
+    
             if resp.status_code != 200:
                 # If specific model name returns 404, fallback through valid active Gemini models
                 if resp.status_code == 404:

@@ -45,6 +45,8 @@ class ClaudeProvider(BaseLLMProvider):
                     "role": msg.get("role"),
                     "content": msg.get("content")
                 })
+        print(f"[CLAUDE] Model={self.model}")
+        print(f"[CLAUDE] Messages={len(cleaned_messages)}")
         
         response = await self.client.messages.create(
             model=self.model,
@@ -53,6 +55,8 @@ class ClaudeProvider(BaseLLMProvider):
             temperature=temp,
             max_tokens=max_tokens,
         )
+        print("[CLAUDE] Response received")
+        print(f"[CLAUDE] Response={response.content[0].text}")
         return response.content[0].text if response.content else ""
 
     async def stream(

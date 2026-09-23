@@ -40,12 +40,34 @@ class GroqProvider(BaseLLMProvider):
 
         url = f"{self.base_url.rstrip('/')}/chat/completions"
 
+        print(f"[GROQ] Calling model={self.model}")
+
+        print(f"[GEMINI REST] Calling model={self.model}")
+
         async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(url, headers=headers, json=payload)
+            resp = await client.post(
+                url,
+                params=params,
+                json=payload
+            )
+
+            print(f"[GEMINI REST] Status Code={resp.status_code}")
+
+            print(f"[GROQ] Status Code={resp.status_code}")
+
             if resp.status_code != 200:
-                raise RuntimeError(f"Groq API error ({resp.status_code}): {resp.text}")
+                print(f"[GROQ ERROR] {resp.text}")
+                raise RuntimeError(
+                    f"Groq API error ({resp.status_code}): {resp.text}"
+                )
+
             data = resp.json()
-            return data["choices"][0]["message"]["content"]
+
+            response_text = data["choices"][0]["message"]["content"]
+
+            print(f"[GROQ] Success. Length={len(response_text)}")
+
+            return response_text
 
     async def stream(
         self,

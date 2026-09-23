@@ -32,12 +32,14 @@ class OllamaProvider(BaseLLMProvider):
         """
         Generate a complete response.
         """
-
+        print(f"[OLLAMA] Model={self.model}")
+        print(f"[OLLAMA] Host={self.config.base_url}")
         response = await self.client.chat(
             model=self.model,
             messages=messages,
         )
-
+        print("[OLLAMA] Response received")
+        print(f"[OLLAMA] Response={response['message']['content']}")
         return response["message"]["content"]
 
     async def stream(

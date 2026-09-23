@@ -35,13 +35,23 @@ class OpenAIProvider(BaseLLMProvider):
         temp = kwargs.get("temperature", self.config.temperature)
         max_tokens = kwargs.get("max_tokens", self.config.max_tokens)
         
-        response = await self.client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            temperature=temp,
-            max_tokens=max_tokens,
-        )
-        return response.choices[0].message.content or ""
+        try:
+            print(f"[OPENAI] Calling model={self.model}")
+
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                temperature=temp,
+                max_tokens=max_tokens,
+            )
+
+            print("[OPENAI] Success")
+
+            return response.choices[0].message.content or ""
+
+        except Exception as e:
+            print(f"[OPENAI ERROR] {type(e).__name__}: {str(e)}")
+            raise
 
     async def stream(
         self,
