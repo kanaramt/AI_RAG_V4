@@ -55,34 +55,51 @@ from fastapi.staticfiles import StaticFiles
 
 app.include_router(api_router, prefix="/api")
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+FRONTEND_DIR = BASE_DIR / "frontend"
+
 # Serve Frontend static assets
-app.mount("/css", StaticFiles(directory="frontend/css"), name="css")
-app.mount("/js", StaticFiles(directory="frontend/js"), name="js")
+#app.mount("/css", StaticFiles(directory="frontend/css"), name="css")
+#app.mount("/js", StaticFiles(directory="frontend/js"), name="js")
+app.mount("/css", StaticFiles(directory=str(FRONTEND_DIR / "css")), name="css")
+app.mount("/js", StaticFiles(directory=str(FRONTEND_DIR / "js")), name="js")
 
 @app.get("/")
 async def read_root():
-    return FileResponse("frontend/index.html", headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+    return FileResponse(
+        str(FRONTEND_DIR / "index.html"),
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+    )
 
 @app.get("/style.css")
 async def read_style():
-    return FileResponse("frontend/style.css")
+    return FileResponse(str(FRONTEND_DIR / "style.css"))
 
 @app.get("/app.js")
 async def read_app_js():
-    return FileResponse("frontend/app.js")
+    return FileResponse(str(FRONTEND_DIR / "app.js"))
 
 @app.get("/performance")
 async def read_performance():
-    return FileResponse("frontend/performance.html", headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+    return FileResponse(
+        str(FRONTEND_DIR / "performance.html"),
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+    )
 
 @app.get("/dataset")
 async def read_dataset():
-    return FileResponse("frontend/dataset.html", headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+    return FileResponse(
+        str(FRONTEND_DIR / "dataset.html"),
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+    )
 
 
 @app.get("/website")
 async def read_website():
-    return FileResponse("frontend/website.html", headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+    return FileResponse(
+        str(FRONTEND_DIR / "website.html"),
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+    )
 
 
 @app.get("/health")
