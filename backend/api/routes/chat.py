@@ -233,6 +233,7 @@ async def list_chats(memory = Depends(get_memory)):
 async def create_chat(data: ChatCreateSchema, memory = Depends(get_memory)):
     from uuid import uuid4
     chat_id = f"chat-{int(time.time() * 1000)}-{uuid4().hex[:6]}"
+    print(f"[CHAT CREATE] id={chat_id} title={data.title}")
     return memory.create_conversation(chat_id, data.title, data.model)
 
 @router.put("/{chat_id}")
@@ -270,7 +271,13 @@ async def post_message(
     retrieval_service: RetrievalService = Depends(get_retrieval_service)
 ):
     start_time = time.time()
+
+    print(f"[CHAT MESSAGE] looking for {chat_id}")
+
     chat = memory.get_conversation(chat_id)
+
+    print(f"[CHAT FOUND] {chat is not None}")
+
     if not chat:
         raise HTTPException(status_code=404, detail="Chat not found")
         
