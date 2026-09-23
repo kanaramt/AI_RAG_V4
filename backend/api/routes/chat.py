@@ -229,12 +229,30 @@ async def extract_attachment_content(attach: dict) -> str:
 async def list_chats(memory = Depends(get_memory)):
     return memory.list_conversations()
 
-@router.post("")
+'''@router.post("")
 async def create_chat(data: ChatCreateSchema, memory = Depends(get_memory)):
     from uuid import uuid4
     chat_id = f"chat-{int(time.time() * 1000)}-{uuid4().hex[:6]}"
     print(f"[CHAT CREATE] id={chat_id} title={data.title}")
-    return memory.create_conversation(chat_id, data.title, data.model)
+    return memory.create_conversation(chat_id, data.title, data.model)'''
+
+@router.post("")
+async def create_chat(data: ChatCreateSchema, memory = Depends(get_memory)):
+    from uuid import uuid4
+
+    chat_id = f"chat-{int(time.time() * 1000)}-{uuid4().hex[:6]}"
+
+    print(f"[CREATE CHAT] chat_id={chat_id}")
+
+    result = memory.create_conversation(
+        chat_id,
+        data.title,
+        data.model
+    )
+
+    print(f"[CREATE CHAT RESULT] {result}")
+
+    return result
 
 @router.put("/{chat_id}")
 async def rename_chat(chat_id: str, data: RenameSchema, memory = Depends(get_memory)):
