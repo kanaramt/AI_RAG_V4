@@ -25,13 +25,16 @@ class GenerationEngine:
         """
 
         print(f"[GENERATION START] model={model}")
-
+        
         llm = LLMFactory.get_llm_by_model(
             model_name=model,
             temperature=temperature,
         )
 
+        print(f"[GENERATION ENGINE] Calling model: {model}")
+
         response = await llm.chat(messages)
+        print(f"[GENERATION ENGINE] Response received. Length={len(response)}")
 
         print(f"[GENERATION END] model={model}")
 

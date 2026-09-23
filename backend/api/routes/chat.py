@@ -577,14 +577,20 @@ async def post_message(
                 }
             ]
             from engines.generation.generation_engine import GenerationEngine
+
+            print("[DEBUG] Creating GenerationEngine")
             generation_engine = GenerationEngine()
-            
+
             model_name = data.model
+            print(f"[DEBUG] About to call LLM with model={model_name}")
+
             rewritten = await generation_engine.generate(
                 model=model_name,
                 messages=rewrite_messages,
                 temperature=0.0
             )
+
+            print("[DEBUG] LLM call completed successfully")
             rewritten_query = rewritten.strip()
             print(f"[Query Rewriter] Rewrote '{query}' -> '{rewritten_query}'")
         except Exception as e:
@@ -810,11 +816,17 @@ async def post_message(
     })
     
     try:
+        print(f"[CHAT ROUTE] About to call LLM")
+        print(f"[CHAT ROUTE] Model = {data.model}")
+        print(f"[CHAT ROUTE] Messages Count = {len(messages)}")
+
         response_text = await generation_engine.generate(
             model=data.model,
             messages=messages,
             temperature=data.settings.get("temperature", 0.2),
         )
+
+        print(f"[CHAT ROUTE] Response Length = {len(response_text)}")
         pipeline_trace[-1]["status"] = "done"
         pipeline_trace[-1]["detail"] = f"LLM ({data.model}) generated response successfully"
         
@@ -857,7 +869,9 @@ async def post_message(
         is_technical_error = True
         pipeline_trace[-1]["status"] = "error"
         pipeline_trace[-1]["detail"] = f"LLM error: {e}"
+        import traceback
         print(f"[LLM Error] Generating response failed: {e}")
+        traceback.print_exc()
         response_text = (
             f"⚠️ Error generating response from LLM (`{data.model}`): {str(e)}\n\n"
             "Please check if the Ollama service is running locally (`ollama run llama3`) or if cloud API keys are configured in Settings."
