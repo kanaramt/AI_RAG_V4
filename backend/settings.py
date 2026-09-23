@@ -25,8 +25,10 @@ class Settings(BaseSettings):
 
     # LLM Configuration
     DEFAULT_PROVIDER: str = "groq"
-    DEFAULT_MODEL: str = "llama-3.3-70b-versatile"
+    #DEFAULT_MODEL: str = "llama-3.3-70b-versatile"
     LLM_PROVIDER: str = "groq"
+    #LLM_MODEL: str = "llama-3.3-70b-versatile"
+    DEFAULT_MODEL: str = "llama-3.3-70b-versatile"
     LLM_MODEL: str = "llama-3.3-70b-versatile"
 
     # Retrieval
