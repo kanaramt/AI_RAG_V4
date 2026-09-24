@@ -68,15 +68,8 @@ class EmbeddingService:
         if not texts:
             return []
 
-        # If we know Ollama is offline, bypass connection attempt and try Gemini cloud fallback immediately
-        if EmbeddingService._ollama_offline:
-            gemini_emb = self._try_gemini_fallback(texts)
-            if gemini_emb:
-                return gemini_emb
-            return self._generate_hash_fallback(texts)
-
+        model_name = self.model if self.model else "nomic-embed-text"
         try:
-            model_name = self.model if self.model else "nomic-embed-text"
             batch_size = 32
             all_embeddings = []
             for i in range(0, len(texts), batch_size):
@@ -88,34 +81,7 @@ class EmbeddingService:
                 all_embeddings.extend(response["embeddings"])
             return all_embeddings
         except Exception as err:
-            print(f"[EmbeddingService] Ollama is offline or error ({err}). Caching offline state.")
-            EmbeddingService._ollama_offline = True
-            gemini_emb = self._try_gemini_fallback(texts)
-            if gemini_emb:
-                return gemini_emb
-            return self._generate_hash_fallback(texts)
-
-    def _try_gemini_fallback(self, texts: List[str]) -> List[List[float]] | None:
-        from llm.factory import _get_env_key
-        api_key = _get_env_key("GEMINI_API_KEY", "GOOGLE_API_KEY")
-        if not api_key:
-            return None
-        try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:batchEmbedContents?key={api_key}"
-            requests = [{"model": "models/text-embedding-004", "content": {"parts": [{"text": t}]}} for t in texts]
-            resp = httpx.post(url, json={"requests": requests}, timeout=5.0)
-            if resp.status_code == 200:
-                data = resp.json()
-                return [e["values"] for e in data.get("embeddings", [])]
-        except Exception as e:
-            print(f"[EmbeddingService] Gemini fallback embedding error: {e}")
-        return None
-
-    def _generate_hash_fallback(self, texts: List[str]) -> List[List[float]]:
-        import hashlib
-        results = []
-        for t in texts:
-            hash_bytes = hashlib.sha256(t.encode('utf-8')).digest()
-            vector = [(b / 255.0) * 2 - 1 for b in (hash_bytes * 24)[:768]]
-            results.append(vector)
-        return results
+            print(f"[EmbeddingService] Ollama embedding generation failed ({err}).")
+            raise RuntimeError(
+                f"Embedding generation failed: Ollama is unreachable at {settings.OLLAMA_BASE_URL} or model '{model_name}' is not loaded ({err})."
+            )

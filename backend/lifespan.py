@@ -66,18 +66,37 @@ async def lifespan(
     # Populate default seed websites in DB if not exist
     db = SessionLocal()
     try:
-        # Dynamically add failed_pages_count column if it does not exist (backward compatibility)
-        try:
-            from sqlalchemy import text
-            db.execute(text("ALTER TABLE crawled_websites ADD COLUMN failed_pages_count INTEGER DEFAULT 0"))
-            db.commit()
-            safe_print("[Lifespan] Added failed_pages_count column to crawled_websites database table.")
-        except Exception as e:
-            safe_print(f"[Lifespan Migration Warning] Could not alter table: {e}")
-            pass  # Column already exists
+        from sqlalchemy import text
 
-        #from database.models.website_ingestion import CrawledWebsiteModel
-        #from services.website_crawler_service import WebsiteCrawlerService
+        # 1. Safely migrate crawled_websites table for failed_pages_count
+        try:
+            db.execute(text("ALTER TABLE crawled_websites ADD COLUMN IF NOT EXISTS failed_pages_count INTEGER DEFAULT 0"))
+            db.commit()
+            safe_print("[Lifespan] Added or verified failed_pages_count column in crawled_websites table.")
+        except Exception as e:
+            db.rollback()
+            try:
+                # SQLite fallback (does not support IF NOT EXISTS in ADD COLUMN)
+                db.execute(text("ALTER TABLE crawled_websites ADD COLUMN failed_pages_count INTEGER DEFAULT 0"))
+                db.commit()
+                safe_print("[Lifespan] Added failed_pages_count column to crawled_websites table.")
+            except Exception:
+                db.rollback()
+
+        # 2. Safely migrate messages table for suggestions and metrics JSONB columns in PostgreSQL
+        for col in ["suggestions", "metrics"]:
+            try:
+                db.execute(text(f"ALTER TABLE messages ADD COLUMN IF NOT EXISTS {col} JSONB"))
+                db.commit()
+            except Exception:
+                db.rollback()
+                try:
+                    # SQLite fallback (JSON as text)
+                    db.execute(text(f"ALTER TABLE messages ADD COLUMN {col} TEXT"))
+                    db.commit()
+                except Exception:
+                    db.rollback()
+
         from database.models.website_ingestion import CrawledWebsiteModel
         from services.website_crawler_service import WebsiteCrawlerService
 
@@ -100,8 +119,9 @@ async def lifespan(
                 )
                 db.add(website)
         db.commit()
-        safe_print("[Lifespan] Initialized default seed website definitions in SQLite.")
+        safe_print("[Lifespan] Initialized default seed website definitions in database.")
     except Exception as init_err:
+        db.rollback()
         safe_print(f"Error initializing default seeds: {init_err}")
     finally:
         db.close()

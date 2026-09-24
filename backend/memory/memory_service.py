@@ -6,6 +6,9 @@ from uuid import uuid4
 from typing import List, Dict, Any
 from services.postgres_chat_sync import PostgresChatSync
 from settings import settings
+from database.session import SessionLocal
+from database.models.conversation_model import ConversationModel
+from database.models.message_model import MessageModel
 
 class MemoryService:
     """
@@ -17,6 +20,11 @@ class MemoryService:
     - Documents (Metadata Registry)
     - RAG Metrics Evaluations (Performance tracking)
     """
+
+    def _uses_postgres(self) -> bool:
+        """Return True when the configured application database is PostgreSQL."""
+        database_url = (settings.DATABASE_URL or "").lower()
+        return database_url.startswith(("postgresql", "postgres"))
 
     def __init__(self):
         db_dir = settings.BACKEND_DIR / "data" / "database_files"
@@ -143,19 +151,88 @@ class MemoryService:
         
         self.conn.commit()
 
-    # --- Conversations CRUD ---
-    
+        # --- Conversations CRUD ---
+
     def list_conversations(self) -> List[Dict[str, Any]]:
+        if self._uses_postgres():
+            db = SessionLocal()
+            try:
+                rows = (
+                    db.query(ConversationModel)
+                    .order_by(ConversationModel.created_at.desc())
+                    .all()
+                )
+
+                return [
+                    {
+                        "id": row.conversation_id,
+                        "title": row.title,
+                        "model": row.model,
+                        "created_at": row.created_at.isoformat() if row.created_at else None,
+                    }
+                    for row in rows
+                ]
+            finally:
+                db.close()
+
         cursor = self.conn.cursor()
-        cursor.execute('SELECT id, title, model, created_at FROM conversations ORDER BY created_at DESC')
+        cursor.execute(
+            "SELECT id, title, model, created_at "
+            "FROM conversations ORDER BY created_at DESC"
+        )
         rows = cursor.fetchall()
         return [dict(row) for row in rows]
 
-    def create_conversation(self, chat_id: str, title: str, model: str) -> Dict[str, Any]:
+    def create_conversation(
+        self,
+        chat_id: str,
+        title: str,
+        model: str
+    ) -> Dict[str, Any]:
+
+        if self._uses_postgres():
+            db = SessionLocal()
+            try:
+                existing = (
+                    db.query(ConversationModel)
+                    .filter(
+                        ConversationModel.conversation_id == chat_id
+                    )
+                    .first()
+                )
+
+                if not existing:
+                    existing = ConversationModel(
+                        conversation_id=chat_id,
+                        title=title,
+                        model=model,
+                    )
+                    db.add(existing)
+                    db.commit()
+                    db.refresh(existing)
+
+                return {
+                    "id": existing.conversation_id,
+                    "title": existing.title,
+                    "model": existing.model,
+                    "created_at": (
+                        existing.created_at.isoformat()
+                        if existing.created_at
+                        else None
+                    ),
+                }
+
+            except Exception:
+                db.rollback()
+                raise
+            finally:
+                db.close()
+
         cursor = self.conn.cursor()
 
         cursor.execute(
-            'INSERT INTO conversations (id, title, model) VALUES (?, ?, ?)',
+            "INSERT INTO conversations (id, title, model) "
+            "VALUES (?, ?, ?)",
             (chat_id, title, model)
         )
 
@@ -168,45 +245,234 @@ class MemoryService:
         )
 
         return {
-            'id': chat_id,
-            'title': title,
-            'model': model,
+            "id": chat_id,
+            "title": title,
+            "model": model,
         }
 
     def get_conversation(self, chat_id: str) -> Dict[str, Any]:
+
+        if self._uses_postgres():
+            db = SessionLocal()
+            try:
+                row = (
+                    db.query(ConversationModel)
+                    .filter(
+                        ConversationModel.conversation_id == chat_id
+                    )
+                    .first()
+                )
+
+                if not row:
+                    return None
+
+                return {
+                    "id": row.conversation_id,
+                    "title": row.title,
+                    "model": row.model,
+                    "created_at": (
+                        row.created_at.isoformat()
+                        if row.created_at
+                        else None
+                    ),
+                }
+            finally:
+                db.close()
+
         cursor = self.conn.cursor()
-        cursor.execute('SELECT id, title, model FROM conversations WHERE id = ?', (chat_id,))
+        cursor.execute(
+            "SELECT id, title, model FROM conversations WHERE id = ?",
+            (chat_id,)
+        )
         row = cursor.fetchone()
         return dict(row) if row else None
 
-    def rename_conversation(self, chat_id: str, new_title: str) -> bool:
+    def update_conversation(
+        self,
+        chat_id: str,
+        title: str | None = None,
+        model: str | None = None
+    ) -> bool:
+        if self._uses_postgres():
+            db = SessionLocal()
+            try:
+                row = (
+                    db.query(ConversationModel)
+                    .filter(
+                        ConversationModel.conversation_id == chat_id
+                    )
+                    .first()
+                )
+
+                if not row:
+                    return False
+
+                if title is not None and title.strip():
+                    row.title = title.strip()
+                if model is not None and model.strip():
+                    row.model = model.strip()
+                db.commit()
+                return True
+
+            except Exception:
+                db.rollback()
+                raise
+            finally:
+                db.close()
+
+        clauses = []
+        params = []
+        if title is not None and title.strip():
+            clauses.append("title = ?")
+            params.append(title.strip())
+        if model is not None and model.strip():
+            clauses.append("model = ?")
+            params.append(model.strip())
+        if not clauses:
+            return True
+        params.append(chat_id)
+
         cursor = self.conn.cursor()
-        cursor.execute('UPDATE conversations SET title = ? WHERE id = ?', (new_title, chat_id))
+        cursor.execute(
+            f"UPDATE conversations SET {', '.join(clauses)} WHERE id = ?",
+            tuple(params)
+        )
         self.conn.commit()
         return cursor.rowcount > 0
 
+    def rename_conversation(
+        self,
+        chat_id: str,
+        new_title: str
+    ) -> bool:
+        return self.update_conversation(chat_id, title=new_title)
 
     def delete_conversation(self, chat_id: str) -> bool:
+
+        if self._uses_postgres():
+            db = SessionLocal()
+            try:
+                row = (
+                    db.query(ConversationModel)
+                    .filter(
+                        ConversationModel.conversation_id == chat_id
+                    )
+                    .first()
+                )
+
+                if not row:
+                    return False
+
+                db.delete(row)
+                db.commit()
+                return True
+
+            except Exception:
+                db.rollback()
+                raise
+            finally:
+                db.close()
+
         cursor = self.conn.cursor()
-        cursor.execute('PRAGMA foreign_keys = ON')
-        cursor.execute('DELETE FROM conversations WHERE id = ?', (chat_id,))
+        cursor.execute("PRAGMA foreign_keys = ON")
+        cursor.execute(
+            "DELETE FROM conversations WHERE id = ?",
+            (chat_id,)
+        )
         self.conn.commit()
         return cursor.rowcount > 0
 
     # --- Messages CRUD ---
 
-    def add_message(self, conversation_id: str, sender: str, text: str, attachments: List[Dict] = None, citations: List[Dict] = None, suggestions: List[str] = None, metrics: Dict = None) -> Dict[str, Any]:
+    def add_message(
+        self,
+        conversation_id: str,
+        sender: str,
+        text: str,
+        attachments: List[Dict] = None,
+        citations: List[Dict] = None,
+        suggestions: List[str] = None,
+        metrics: Dict = None
+    ) -> Dict[str, Any]:
+
         msg_id = f"msg-{int(datetime.now().timestamp() * 1000)}-{uuid4().hex[:8]}"
+
+        if self._uses_postgres():
+            db = SessionLocal()
+
+            try:
+                message = MessageModel(
+                    message_id=msg_id,
+                    conversation_id=conversation_id,
+                    sender=sender,
+                    text=text,
+                    attachments=attachments or [],
+                    citations=citations or [],
+                    suggestions=suggestions or [],
+                    metrics=metrics,
+                )
+
+                db.add(message)
+                db.commit()
+                db.refresh(message)
+
+                return {
+                    "id": message.message_id,
+                    "conversation_id": message.conversation_id,
+                    "sender": message.sender,
+                    "text": message.text,
+                    "attachments": message.attachments or [],
+                    "citations": message.citations or [],
+                    "suggestions": message.suggestions or [],
+                    "metrics": message.metrics,
+                    "created_at": (
+                        message.created_at.isoformat()
+                        if message.created_at
+                        else None
+                    ),
+                }
+
+            except Exception:
+                db.rollback()
+                raise
+
+            finally:
+                db.close()
+
+        # SQLite local-development fallback
         attachments_json = json.dumps(attachments) if attachments else None
         citations_json = json.dumps(citations) if citations else None
         suggestions_json = json.dumps(suggestions) if suggestions else None
         metrics_json = json.dumps(metrics) if metrics else None
-        
+
         cursor = self.conn.cursor()
-        cursor.execute('''
-            INSERT INTO messages (id, conversation_id, sender, text, attachments, citations, suggestions, metrics)
+
+        cursor.execute(
+            '''
+            INSERT INTO messages (
+                id,
+                conversation_id,
+                sender,
+                text,
+                attachments,
+                citations,
+                suggestions,
+                metrics
+            )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (msg_id, conversation_id, sender, text, attachments_json, citations_json, suggestions_json, metrics_json))
+            ''',
+            (
+                msg_id,
+                conversation_id,
+                sender,
+                text,
+                attachments_json,
+                citations_json,
+                suggestions_json,
+                metrics_json,
+            )
+        )
+
         self.conn.commit()
 
         PostgresChatSync.save_message(
@@ -216,20 +482,51 @@ class MemoryService:
             text=text,
             attachments=attachments,
             citations=citations,
+            suggestions=suggestions,
+            metrics=metrics,
         )
-        
-        return {
-            'id': msg_id,
-            'conversation_id': conversation_id,
-            'sender': sender,
-            'text': text,
-            'attachments': attachments or [],
-            'citations': citations or [],
-            'suggestions': suggestions or [],
-            'metrics': metrics
-        }
 
+        return {
+            "id": msg_id,
+            "conversation_id": conversation_id,
+            "sender": sender,
+            "text": text,
+            "attachments": attachments or [],
+            "citations": citations or [],
+            "suggestions": suggestions or [],
+            "metrics": metrics,
+        }
     def get_messages(self, conversation_id: str) -> List[Dict[str, Any]]:
+        if self._uses_postgres():
+            db = SessionLocal()
+            try:
+                rows = (
+                    db.query(MessageModel)
+                    .filter(MessageModel.conversation_id == conversation_id)
+                    .order_by(MessageModel.created_at.asc())
+                    .all()
+                )
+                return [
+                    {
+                        "id": row.message_id,
+                        "conversation_id": row.conversation_id,
+                        "sender": row.sender,
+                        "text": row.text,
+                        "attachments": row.attachments or [],
+                        "citations": row.citations or [],
+                        "suggestions": row.suggestions or [],
+                        "metrics": row.metrics,
+                        "created_at": (
+                            row.created_at.isoformat()
+                            if row.created_at
+                            else None
+                        ),
+                    }
+                    for row in rows
+                ]
+            finally:
+                db.close()
+
         cursor = self.conn.cursor()
         cursor.execute('SELECT id, sender, text, attachments, citations, suggestions, metrics, created_at FROM messages WHERE conversation_id = ? ORDER BY created_at ASC', (conversation_id,))
         rows = cursor.fetchall()
@@ -246,6 +543,29 @@ class MemoryService:
         return messages
 
     def truncate_messages(self, conversation_id: str, before_message_id: str) -> bool:
+        if self._uses_postgres():
+            db = SessionLocal()
+            try:
+                msg = (
+                    db.query(MessageModel)
+                    .filter(MessageModel.message_id == before_message_id)
+                    .first()
+                )
+                if msg:
+                    created_at = msg.created_at
+                    db.query(MessageModel).filter(
+                        MessageModel.conversation_id == conversation_id,
+                        MessageModel.created_at >= created_at,
+                    ).delete()
+                    db.commit()
+                    return True
+                return False
+            except Exception:
+                db.rollback()
+                raise
+            finally:
+                db.close()
+
         cursor = self.conn.cursor()
         cursor.execute('SELECT created_at FROM messages WHERE id = ?', (before_message_id,))
         row = cursor.fetchone()

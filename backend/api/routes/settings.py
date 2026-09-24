@@ -34,19 +34,9 @@ class SystemSettingsModel(BaseModel):
 
 
 def _infer_provider(model: str) -> str:
+    from llm.factory import MODEL_PROVIDER_MAP
     m_lower = (model or "").lower()
-    if any(k in m_lower for k in ["gemini", "flash", "pro-latest"]):
-        return "gemini"
-    elif any(k in m_lower for k in ["llama-3", "mixtral", "gemma", "versatile", "instant", "groq"]):
-        return "groq"
-    elif any(k in m_lower for k in ["gpt-4", "gpt-3", "openai"]):
-        return "openai"
-    elif any(k in m_lower for k in ["claude", "anthropic"]):
-        return "anthropic"
-    elif any(k in m_lower for k in ["grok"]):
-        return "grok"
-    else:
-        return "ollama"
+    return MODEL_PROVIDER_MAP.get(m_lower, "ollama")
 
 
 def _update_env_file(key_values: dict[str, str]):

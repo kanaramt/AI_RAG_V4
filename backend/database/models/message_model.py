@@ -56,6 +56,16 @@ class MessageModel(Base):
         nullable=True,
     )
 
+    suggestions = Column(
+        JSONB,
+        nullable=True,
+    )
+
+    metrics = Column(
+        JSONB,
+        nullable=True,
+    )
+
     created_at = Column(
         DateTime(timezone=True),
         default=ist_now,

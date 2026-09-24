@@ -6,33 +6,15 @@ from llm.config import LLMConfig
 from llm.providers.base import BaseLLMProvider
 
 
-GEMINI_MODEL_ALIASES = {
-    # Direct active models
-    "gemini-3.1-flash-lite": "gemini-3.1-flash-lite",
-    "gemini-3.5-flash-lite": "gemini-3.5-flash-lite",
-    # Deprecated & legacy aliases → working active models
-    "gemini-2.5-flash": "gemini-3.5-flash-lite",
-    "gemini-2.5-flash-lite": "gemini-3.1-flash-lite",
-    "gemini-2.0-flash": "gemini-3.5-flash-lite",
-    "gemini-2.0-flash-lite": "gemini-3.1-flash-lite",
-    "gemini-flash-lite": "gemini-3.1-flash-lite",
-    "gemini-1.5-flash-lite": "gemini-3.1-flash-lite",
-    "gemini-1.5-flash": "gemini-3.5-flash-lite",
-    "gemini-1.5-pro": "gemini-3.5-flash-lite",
-    "gemini-flash-latest": "gemini-3.5-flash-lite",
-}
-
-
 class GeminiProvider(BaseLLMProvider):
     """
-    Google Gemini LLM Provider supporting gemini-3.5-flash-lite and gemini-3.1-flash-lite.
-    Includes smart model aliasing and multi-tier REST API fallback.
+    Google Gemini LLM Provider supporting official Gemini 2.5, 2.0, and 1.5 models.
+    Supports official Google Generative AI SDK with automatic REST API fallback.
     """
 
     def __init__(self, config: LLMConfig):
         self.config = config
-        raw_model = config.model or "gemini-3.5-flash-lite"
-        self.model = GEMINI_MODEL_ALIASES.get(raw_model.lower(), raw_model)
+        self.model = config.model or "gemini-2.5-flash"
         
         # Resolve key from config, os.environ, or .env
         api_k = config.api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
@@ -84,19 +66,6 @@ class GeminiProvider(BaseLLMProvider):
             print(f"[GEMINI REST] Status Code={resp.status_code}")
     
             if resp.status_code != 200:
-                # If specific model name returns 404, fallback through valid active Gemini models
-                if resp.status_code == 404:
-                    fallback_candidates = [
-                        "gemini-3.5-flash-lite",
-                        "gemini-3.1-flash-lite",
-                    ]
-                    for fb_model in fallback_candidates:
-                        if self.model != fb_model:
-                            fb_url = f"https://generativelanguage.googleapis.com/v1beta/models/{fb_model}:generateContent"
-                            fb_resp = await client.post(fb_url, params=params, json=payload)
-                            if fb_resp.status_code == 200:
-                                data = fb_resp.json()
-                                return data["candidates"][0]["content"]["parts"][0]["text"]
                 raise RuntimeError(f"Gemini API error ({resp.status_code}): {resp.text}")
             data = resp.json()
             return data["candidates"][0]["content"]["parts"][0]["text"]

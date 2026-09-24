@@ -29,6 +29,75 @@ def _get_env_key(key_name: str, fallback_key: str = None) -> str:
         pass
     return ""
 
+MODEL_PROVIDER_MAP = {
+    # ============================================================
+    # OPENAI
+    # ============================================================
+    "gpt-5.5": "openai",
+    "gpt-5.4": "openai",
+    "gpt-5.4-mini": "openai",
+    "gpt-5.4-nano": "openai",
+    "gpt-4o": "openai",
+    "gpt-4o-mini": "openai",
+    "gpt-4.1": "openai",
+    "gpt-4.1-mini": "openai",
+
+    # ============================================================
+    # ANTHROPIC CLAUDE
+    # ============================================================
+    "claude-opus-5": "claude",
+    "claude-opus-4-8": "claude",
+    "claude-opus-4-7": "claude",
+    "claude-opus-4-6": "claude",
+    "claude-sonnet-5": "claude",
+    "claude-sonnet-4-6": "claude",
+    "claude-sonnet-4-5-20250929": "claude",
+    "claude-haiku-4-5-20251001": "claude",
+
+    # ============================================================
+    # GOOGLE GEMINI
+    # ============================================================
+    "gemini-3.8-flash": "gemini",
+    "gemini-3.7-flash": "gemini",
+    "gemini-3.6-flash": "gemini",
+    "gemini-3.5-flash": "gemini",
+    "gemini-3.5-flash-lite": "gemini",
+    "gemini-3.1-flash-lite": "gemini",
+
+    # ============================================================
+    # XAI GROK
+    # ============================================================
+    "grok-4.7": "grok",
+    "grok-4.6": "grok",
+    "grok-4.5": "grok",
+
+    # ============================================================
+    # GROQ CLOUD
+    # ============================================================
+    "openai/gpt-oss-120b": "groq",
+    "openai/gpt-oss-20b": "groq",
+
+    # ============================================================
+    # OLLAMA LOCAL
+    # ============================================================
+    "llama3": "ollama",
+    "llama3:8b": "ollama",
+    "llama3:latest": "ollama",
+    "llama3.1": "ollama",
+    "llama3.1:latest": "ollama",
+    "llama3.2": "ollama",
+    "llama3.2:latest": "ollama",
+    "mistral": "ollama",
+    "mistral:7b": "ollama",
+    "mistral:latest": "ollama",
+    "phi3": "ollama",
+    "phi3:3.8b": "ollama",
+    "phi3:latest": "ollama",
+    "phi3.5": "ollama",
+    "deepseek-r1": "ollama",
+    "gemma2": "ollama",
+    "qwen2.5": "ollama",
+}
 
 class LLMFactory:
     """
@@ -68,44 +137,67 @@ class LLMFactory:
         print(f"Incoming model_name_lower = {model_name_lower}")
         print("=" * 80)
         
-        if "gpt" in model_name_lower:
-            provider = "openai"
-            model = "gpt-4o"
+        provider = MODEL_PROVIDER_MAP.get(model_name_lower)
+
+        if provider is None:
+            raise ValueError(
+                f"Unsupported model '{model_name}'. "
+                "The model is not registered in MODEL_PROVIDER_MAP."
+            )
+
+        # Preserve the exact model selected by the user.
+        model = model_name
+
+        if provider == "openai":
             api_key = _get_env_key("OPENAI_API_KEY")
             if not api_key:
-                raise ValueError("⚠️ OpenAI API Key is missing. Please add your OPENAI_API_KEY in Settings -> API Keys & Cloud LLMs.")
+                raise ValueError(
+                    "⚠️ OpenAI API Key is missing. "
+                    "Please add your OPENAI_API_KEY in Settings -> API Keys & Cloud LLMs."
+                )
             base_url = None
-        elif "claude" in model_name_lower:
-            provider = "claude"
-            model = "claude-3-5-sonnet-20241022"
+
+        elif provider == "claude":
             api_key = _get_env_key("ANTHROPIC_API_KEY")
             if not api_key:
-                raise ValueError("⚠️ Anthropic Claude API Key is missing. Please add your ANTHROPIC_API_KEY in Settings -> API Keys & Cloud LLMs.")
+                raise ValueError(
+                    "⚠️ Anthropic Claude API Key is missing. "
+                    "Please add your ANTHROPIC_API_KEY in Settings -> API Keys & Cloud LLMs."
+                )
             base_url = None
-        elif "gemini" in model_name_lower:
-            provider = "gemini"
-            model = model_name if "gemini" in model_name_lower else "gemini-3.5-flash-lite"
+
+        elif provider == "gemini":
             api_key = _get_env_key("GEMINI_API_KEY", "GOOGLE_API_KEY")
             if not api_key:
-                raise ValueError("⚠️ Google Gemini API Key is missing. Please add your GEMINI_API_KEY in Settings -> API Keys & Cloud LLMs.")
+                raise ValueError(
+                    "⚠️ Google Gemini API Key is missing. "
+                    "Please add your GEMINI_API_KEY in Settings -> API Keys & Cloud LLMs."
+                )
             base_url = None
-        elif "grok" in model_name_lower:
-            provider = "grok"
-            model = "grok-beta"
+
+        elif provider == "grok":
             api_key = _get_env_key("GROK_API_KEY", "XAI_API_KEY")
             if not api_key:
-                raise ValueError("⚠️ xAI Grok API Key is missing. Please add your GROK_API_KEY in Settings -> API Keys & Cloud LLMs.")
+                raise ValueError(
+                    "⚠️ xAI Grok API Key is missing. "
+                    "Please add your GROK_API_KEY in Settings -> API Keys & Cloud LLMs."
+                )
             base_url = "https://api.x.ai/v1"
-        elif "groq" in model_name_lower or "llama-3.3" in model_name_lower or "llama-3.1" in model_name_lower or "mixtral" in model_name_lower or "gemma2" in model_name_lower:
-            provider = "groq"
-            model = model_name if ("llama-" in model_name_lower or "mixtral" in model_name_lower or "gemma" in model_name_lower) else "llama-3.3-70b-versatile"
+
+        elif provider == "groq":
             api_key = _get_env_key("GROQ_API_KEY")
             if not api_key:
-                raise ValueError("⚠️ Groq API Key is missing. Please add your GROQ_API_KEY in Settings -> API Keys & Cloud LLMs.")
+                raise ValueError(
+                    "⚠️ Groq API Key is missing. "
+                    "Please add your GROQ_API_KEY in Settings -> API Keys & Cloud LLMs."
+                )
             base_url = "https://api.groq.com/openai/v1"
-        else:
-            provider = "ollama"
-            # Map frontend tags to locally available tags
+
+        elif provider == "ollama":
+            api_key = None
+            base_url = settings.OLLAMA_BASE_URL
+
+            # Frontend uses friendly aliases for these local models.
             if model_name_lower == "llama3":
                 model = "llama3:latest"
             elif model_name_lower == "llama3.2":
@@ -114,10 +206,6 @@ class LLMFactory:
                 model = "mistral:latest"
             elif model_name_lower == "phi3":
                 model = "phi3:latest"
-            else:
-                model = model_name
-            api_key = None
-            base_url = settings.OLLAMA_BASE_URL
 
         config = LLMConfig(
             provider=provider,

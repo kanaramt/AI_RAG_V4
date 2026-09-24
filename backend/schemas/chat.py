@@ -6,15 +6,22 @@ class ChatCreateSchema(BaseModel):
     model: str
 
 class RenameSchema(BaseModel):
-    title: str
+    title: Optional[str] = None
+    model: Optional[str] = None
 
 class ChatRequest(BaseModel):
     """
     Request sent by the frontend to the AI Agent.
     """
     text: str = Field(..., description="User question or prompt")
-    attachments: Optional[List[Dict[str, Any]]] = Field(default_factory=list, description="List of attachment files/images")
-    model: str = Field(..., description="Model name selected in UI")
+    attachments: Optional[List[Dict[str, Any]]] = Field(
+        default_factory=list,
+        description="List of attachment files/images"
+    )
+    model: str = Field(
+        ...,
+        description="LLM model selected in UI"
+    )
     settings: Optional[Dict[str, Any]] = Field(
         default_factory=lambda: {
             'topK': 4,

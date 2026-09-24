@@ -57,27 +57,69 @@ let state = {
 let activeAbortController = null;
 
 const LEGACY_MODEL_MAP = {
-    'gemini-1.5-flash': 'gemini-2.5-flash',
-    'gemini-1.5-pro': 'gemini-2.5-pro',
-    'gemini-1.0-pro': 'gemini-2.5-flash'
+    'llama-3.1-8b-instant': 'openai/gpt-oss-20b',
+    'llama-3.3-70b-versatile': 'openai/gpt-oss-120b',
+    'claude-3-5-sonnet': 'claude-sonnet-4-6',
+    'claude-3-5-haiku': 'claude-haiku-4-5-20251001',
+    'claude-3-opus': 'claude-opus-4-7',
+    'grok-beta': 'grok-4.5',
+    'grok-2': 'grok-4.6',
+    'gemini-1.5-flash': 'gemini-3.5-flash',
+    'gemini-1.5-pro': 'gemini-3.7-flash',
+    'gemini-2.0-flash': 'gemini-3.6-flash',
+    'gemini-2.5-flash': 'gemini-3.5-flash'
 };
 
 const modelLabels = {
+    // OpenAI
+    'gpt-5.5': 'gpt-5.5 (OpenAI)',
+    'gpt-5.4': 'gpt-5.4 (OpenAI)',
+    'gpt-5.4-mini': 'gpt-5.4-mini (OpenAI)',
+    'gpt-5.4-nano': 'gpt-5.4-nano (OpenAI)',
+    'gpt-4o': 'gpt-4o (OpenAI)',
+    'gpt-4o-mini': 'gpt-4o-mini (OpenAI)',
+    'gpt-4.1': 'gpt-4.1 (OpenAI)',
+    'gpt-4.1-mini': 'gpt-4.1-mini (OpenAI)',
+
+    // Anthropic Claude
+    'claude-opus-5': 'claude-opus-5 (Claude)',
+    'claude-opus-4-8': 'claude-opus-4-8 (Claude)',
+    'claude-opus-4-7': 'claude-opus-4-7 (Claude)',
+    'claude-opus-4-6': 'claude-opus-4-6 (Claude)',
+    'claude-sonnet-5': 'claude-sonnet-5 (Claude)',
+    'claude-sonnet-4-6': 'claude-sonnet-4-6 (Claude)',
+    'claude-sonnet-4-5-20250929': 'claude-sonnet-4-5 (Claude)',
+    'claude-haiku-4-5-20251001': 'claude-haiku-4-5 (Claude)',
+
+    // Google Gemini
+    'gemini-3.8-flash': 'gemini-3.8-flash (Gemini)',
+    'gemini-3.7-flash': 'gemini-3.7-flash (Gemini)',
+    'gemini-3.6-flash': 'gemini-3.6-flash (Gemini)',
+    'gemini-3.5-flash': 'gemini-3.5-flash (Gemini)',
+    'gemini-3.5-flash-lite': 'gemini-3.5-flash-lite (Gemini)',
+    'gemini-3.1-flash-lite': 'gemini-3.1-flash-lite (Gemini)',
+
+    // xAI Grok
+    'grok-4.7': 'grok-4.7 (xAI)',
+    'grok-4.6': 'grok-4.6 (xAI)',
+    'grok-4.5': 'grok-4.5 (xAI)',
+
+    // Groq Cloud
+    'openai/gpt-oss-120b': 'openai/gpt-oss-120b (Groq)',
+    'openai/gpt-oss-20b': 'openai/gpt-oss-20b (Groq)',
+
+    // Ollama Local
     'llama3': 'llama3:8b (Ollama)',
+    'llama3:8b': 'llama3:8b (Ollama)',
+    'llama3:latest': 'llama3:latest (Ollama)',
+    'llama3.1': 'llama3.1 (Ollama)',
+    'llama3.2': 'llama3.2 (Ollama)',
     'mistral': 'mistral:7b (Ollama)',
     'phi3': 'phi3:3.8b (Ollama)',
-    'gpt-4o': 'gpt-4o (OpenAI)',
-    'claude-3-5-sonnet': 'claude-3-5-sonnet',
-    'grok-beta': 'grok-beta (xAI)',
-    'llama-3.3-70b-versatile': 'llama-3.3-70b (Groq)',
-    'gemini-3.1-flash-lite': 'gemini-3.1-flash-lite (Gemini)',
-    'gemini-3.5-flash-lite': 'gemini-3.5-flash-lite (Gemini)',
-    'gemini-2.5-flash': 'gemini-2.5-flash (Gemini)',
-    'gemini-2.0-flash-lite': 'gemini-2.0-flash-lite (Gemini)',
-    'gemini-2.5-flash-lite': 'gemini-2.0-flash-lite (Gemini)',
-    'gemini-2.0-flash': 'gemini-2.0-flash (Gemini)',
-    'gemini-2.5-pro': 'gemini-2.5-pro (Gemini)',
-    'gemini-flash-latest': 'gemini-flash-latest (Gemini)'
+    'phi3.5': 'phi3.5 (Ollama)',
+    'deepseek-r1': 'deepseek-r1 (Ollama)',
+    'gemma2': 'gemma2 (Ollama)',
+    'qwen2.5': 'qwen2.5 (Ollama)'
 };
 
 // DOM Elements
@@ -142,9 +184,14 @@ const PROVIDER_CONFIGS = {
     'openai': {
         name: 'OpenAI',
         models: [
-            { id: 'gpt-4o', label: 'gpt-4o (Flagship Model)' },
+            { id: 'gpt-5.5', label: 'gpt-5.5 (Flagship Frontier)' },
+            { id: 'gpt-5.4', label: 'gpt-5.4 (Advanced Multimodal)' },
+            { id: 'gpt-5.4-mini', label: 'gpt-5.4-mini (Efficient Fast)' },
+            { id: 'gpt-5.4-nano', label: 'gpt-5.4-nano (Ultra Lightweight)' },
+            { id: 'gpt-4o', label: 'gpt-4o (Omni Reasoning)' },
             { id: 'gpt-4o-mini', label: 'gpt-4o-mini (Fast & Efficient)' },
-            { id: 'gpt-4-turbo', label: 'gpt-4-turbo (High Capacity)' }
+            { id: 'gpt-4.1', label: 'gpt-4.1 (High Capacity)' },
+            { id: 'gpt-4.1-mini', label: 'gpt-4.1-mini (Compact High Speed)' }
         ],
         placeholder: 'sk-proj-...',
         link: 'https://platform.openai.com/api-keys',
@@ -155,8 +202,12 @@ const PROVIDER_CONFIGS = {
     'gemini': {
         name: 'Google Gemini',
         models: [
-            { id: 'gemini-3.1-flash-lite', label: 'gemini-3.1-flash-lite' },
-            { id: 'gemini-3.5-flash-lite', label: 'gemini-3.5-flash-lite' }
+            { id: 'gemini-3.8-flash', label: 'gemini-3.8-flash (Frontier Speed)' },
+            { id: 'gemini-3.7-flash', label: 'gemini-3.7-flash (Hybrid Reasoning)' },
+            { id: 'gemini-3.6-flash', label: 'gemini-3.6-flash (Fast & Accurate)' },
+            { id: 'gemini-3.5-flash', label: 'gemini-3.5-flash (Balanced Multimodal)' },
+            { id: 'gemini-3.5-flash-lite', label: 'gemini-3.5-flash-lite (Cost Efficient)' },
+            { id: 'gemini-3.1-flash-lite', label: 'gemini-3.1-flash-lite (Ultra Lightweight)' }
         ],
         placeholder: 'AIzaSy...',
         link: 'https://aistudio.google.com/app/apikey',
@@ -167,9 +218,14 @@ const PROVIDER_CONFIGS = {
     'claude': {
         name: 'Anthropic Claude',
         models: [
-            { id: 'claude-3-5-sonnet', label: 'claude-3-5-sonnet (Frontier Coding)' },
-            { id: 'claude-3-5-haiku', label: 'claude-3-5-haiku (Lightweight Fast)' },
-            { id: 'claude-3-opus', label: 'claude-3-opus (Complex Analysis)' }
+            { id: 'claude-opus-5', label: 'claude-opus-5 (Ultimate Frontier)' },
+            { id: 'claude-opus-4-8', label: 'claude-opus-4-8 (Deep Reasoning)' },
+            { id: 'claude-opus-4-7', label: 'claude-opus-4-7 (Complex Analysis)' },
+            { id: 'claude-opus-4-6', label: 'claude-opus-4-6 (High Intelligence)' },
+            { id: 'claude-sonnet-5', label: 'claude-sonnet-5 (Frontier Coding & Math)' },
+            { id: 'claude-sonnet-4-6', label: 'claude-sonnet-4-6 (Fast Agentic)' },
+            { id: 'claude-sonnet-4-5-20250929', label: 'claude-sonnet-4-5 (Hybrid Speed)' },
+            { id: 'claude-haiku-4-5-20251001', label: 'claude-haiku-4-5 (Instant Response)' }
         ],
         placeholder: 'sk-ant-api...',
         link: 'https://console.anthropic.com/settings/keys',
@@ -180,9 +236,9 @@ const PROVIDER_CONFIGS = {
     'grok': {
         name: 'xAI Grok',
         models: [
-            { id: 'grok-beta', label: 'grok-beta (Frontier xAI)' },
-            { id: 'grok-2', label: 'grok-2 (High Intelligence)' },
-            { id: 'grok-2-mini', label: 'grok-2-mini (Fast Reasoning)' }
+            { id: 'grok-4.7', label: 'grok-4.7 (Frontier Reasoning)' },
+            { id: 'grok-4.6', label: 'grok-4.6 (High Performance)' },
+            { id: 'grok-4.5', label: 'grok-4.5 (Real-time Knowledge)' }
         ],
         placeholder: 'xai-...',
         link: 'https://console.x.ai/',
@@ -193,10 +249,8 @@ const PROVIDER_CONFIGS = {
     'groq': {
         name: 'Groq Cloud',
         models: [
-            { id: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile (Ultra Fast)' },
-            { id: 'llama-3.1-8b-instant', label: 'llama-3.1-8b-instant (Instant Speed)' },
-            { id: 'mixtral-8x7b-32768', label: 'mixtral-8x7b-32768 (MoE Context)' },
-            { id: 'gemma2-9b-it', label: 'gemma2-9b-it (Google Gemma on Groq)' }
+            { id: 'openai/gpt-oss-120b', label: 'openai/gpt-oss-120b (Ultra Fast Inference)' },
+            { id: 'openai/gpt-oss-20b', label: 'openai/gpt-oss-20b (Instant Low Latency)' }
         ],
         placeholder: 'gsk_...',
         link: 'https://console.groq.com/keys',
@@ -208,8 +262,14 @@ const PROVIDER_CONFIGS = {
         name: 'Ollama (Local System)',
         models: [
             { id: 'llama3', label: 'llama3:8b (Local System)' },
+            { id: 'llama3.1', label: 'llama3.1:8b (Local System)' },
+            { id: 'llama3.2', label: 'llama3.2:3b (Local System)' },
             { id: 'mistral', label: 'mistral:7b (Local System)' },
-            { id: 'phi3', label: 'phi3:3.8b (Local System)' }
+            { id: 'phi3', label: 'phi3:3.8b (Local System)' },
+            { id: 'phi3.5', label: 'phi3.5 (Local System)' },
+            { id: 'deepseek-r1', label: 'deepseek-r1 (Local Reasoning)' },
+            { id: 'gemma2', label: 'gemma2 (Local Google)' },
+            { id: 'qwen2.5', label: 'qwen2.5 (Local Alibaba)' }
         ],
         placeholder: 'No API key required for local Ollama',
         link: 'http://localhost:11434',
@@ -236,11 +296,16 @@ let cachedApiKeys = {
 function getProviderFromModel(modelId) {
     if (!modelId) return 'openai';
     const m = modelId.toLowerCase();
+    for (const [pKey, pConf] of Object.entries(PROVIDER_CONFIGS)) {
+        if (pConf.models && pConf.models.some(item => item.id.toLowerCase() === m)) {
+            return pKey;
+        }
+    }
     if (m.includes('gemini')) return 'gemini';
-    if (m.includes('groq') || m.includes('llama-3.3') || m.includes('llama-3.1') || m.includes('mixtral') || m.includes('gemma2')) return 'groq';
-    if (m.includes('claude') || m.includes('anthropic')) return 'anthropic';
+    if (m.includes('claude') || m.includes('anthropic')) return 'claude';
     if (m.includes('grok') || m.includes('xai')) return 'grok';
-    if (m.includes('gpt') || m.includes('openai')) return 'openai';
+    if (m.includes('llama-3.3') || m.includes('llama-3.1') || m.includes('mixtral') || m.includes('gemma')) return 'groq';
+    if (m.includes('gpt') || m.includes('o1') || m.includes('o3') || m.includes('openai')) return 'openai';
     if (m.includes('llama') || m.includes('mistral') || m.includes('phi') || m.includes('ollama')) return 'ollama';
     return 'openai';
 }
@@ -1732,10 +1797,19 @@ async function loadChat(chatId) {
 
     try {
         const response = await fetch(`/api/chats/${chatId}/messages`);
+        if (!response.ok) {
+            if (response.status === 404) {
+                // Stale active chat -> clear it and refresh chat list
+                showWelcomeView();
+                await fetchChats();
+                return;
+            }
+            throw new Error(`Failed to load messages (${response.status})`);
+        }
         const messages = await response.json();
         
         // Render Messages
-        if (messages.length === 0) {
+        if (!Array.isArray(messages) || messages.length === 0) {
             showWelcomeView();
         } else {
             welcomeView.classList.add('hidden');
@@ -1771,7 +1845,16 @@ async function createNewChat() {
                 model: state.selectedModel
             })
         });
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            showToast(errData.detail || "Failed to create new chat");
+            return;
+        }
         const newChat = await response.json();
+        if (!newChat || !newChat.id) {
+            showToast("Failed to create new chat: invalid server response");
+            return;
+        }
         
         state.chats.unshift(newChat);
         state.activeChatId = newChat.id;
@@ -1784,6 +1867,7 @@ async function createNewChat() {
         promptTextarea.focus();
     } catch (e) {
         console.error(e);
+        showToast("Error creating chat");
     }
 }
 
@@ -2788,13 +2872,23 @@ async function executeWebSearch(rawQuery, attachments = [], tempId = null) {
                     model: state.selectedModel
                 })
             });
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                showToast(errData.detail || "Failed to initialize web search session");
+                return;
+            }
             const newChat = await response.json();
+            if (!newChat || !newChat.id) {
+                showToast("Invalid chat response from server");
+                return;
+            }
             state.chats.unshift(newChat);
             state.activeChatId = newChat.id;
             localStorage.setItem('antigravity_rag_active_id', newChat.id);
             renderRecentChatsList();
         } catch (err) {
             console.error(err);
+            showToast("Failed to connect to backend server");
             return;
         }
     }
@@ -3098,13 +3192,23 @@ async function sendMessage() {
                     model: state.selectedModel
                 })
             });
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                showToast(errData.detail || "Failed to initialize conversation session");
+                return;
+            }
             const newChat = await response.json();
+            if (!newChat || !newChat.id) {
+                showToast("Invalid server response when creating chat");
+                return;
+            }
             state.chats.unshift(newChat);
             state.activeChatId = newChat.id;
             localStorage.setItem('antigravity_rag_active_id', newChat.id);
             renderRecentChatsList();
         } catch (err) {
             console.error(err);
+            showToast("Failed to connect to backend server");
             return;
         }
     }

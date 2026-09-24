@@ -25,11 +25,9 @@ class Settings(BaseSettings):
 
     # LLM Configuration
     DEFAULT_PROVIDER: str = "groq"
-    #DEFAULT_MODEL: str = "llama-3.3-70b-versatile"
     LLM_PROVIDER: str = "groq"
-    #LLM_MODEL: str = "llama-3.3-70b-versatile"
-    DEFAULT_MODEL: str = "llama-3.1-8b-instant"
-    LLM_MODEL: str = "llama-3.1-8b-instant"
+    DEFAULT_MODEL: str = "openai/gpt-oss-20b"
+    LLM_MODEL: str = "openai/gpt-oss-20b"
 
     # Retrieval
     VECTOR_STORE: str = "hybrid"

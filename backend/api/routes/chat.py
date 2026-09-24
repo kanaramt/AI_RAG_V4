@@ -256,7 +256,7 @@ async def create_chat(data: ChatCreateSchema, memory = Depends(get_memory)):
 
 @router.put("/{chat_id}")
 async def rename_chat(chat_id: str, data: RenameSchema, memory = Depends(get_memory)):
-    success = memory.rename_conversation(chat_id, data.title)
+    success = memory.update_conversation(chat_id, title=data.title, model=data.model)
     if not success:
         raise HTTPException(status_code=404, detail="Chat not found")
     return {"status": "success"}

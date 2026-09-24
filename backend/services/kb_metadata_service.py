@@ -21,7 +21,7 @@ class KBMetadataService:
                         return data
             except Exception as e:
                 print(f"[KBMetadataService] Error reading metadata file: {e}")
-        
+
         # Build metadata synchronously if file does not exist (using event loop if already running)
         import asyncio
         try:
@@ -29,7 +29,7 @@ class KBMetadataService:
         except RuntimeError:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            
+
         if loop.is_running():
             metadata = {
                 "kb_name": "Dynamic Knowledge Base",
@@ -73,7 +73,7 @@ class KBMetadataService:
         document_count = len(docs)
         document_titles = [doc.title for doc in docs if doc.title]
         categories_set = set()
-        
+
         for doc in docs:
             meta = doc.metadata or {}
             if isinstance(meta, dict):
@@ -101,21 +101,31 @@ Provide a JSON object with exactly the following fields (nothing else, no format
   "major_themes": ["Theme 1", "Theme 2", ... (up to 5 major themes)]
 }}
 """
-        kb_name = "Dynamic Knowledge Base"
-        kb_summary = "A collection of documents in the knowledge base."
-        kb_topics = []
-        major_themes = []
+        # Build intelligent deterministic fallback metadata
+        top_titles = document_titles[:5]
+        top_cats = list(categories_set)[:5]
+        sample_topics = top_cats if top_cats else top_titles[:6]
+
+        kb_name = f"Knowledge Base ({document_count} Documents)"
+        if top_titles:
+            kb_name = f"{top_titles[0]} & Related Documents" if len(top_titles) > 1 else str(top_titles[0])
+
+        cat_str = f" across categories ({', '.join(top_cats)})" if top_cats else ""
+        kb_summary = f"Enterprise knowledge base indexing {document_count} active document(s){cat_str} for semantic retrieval and question answering."
+        kb_topics = sample_topics
+        major_themes = top_cats if top_cats else ["Knowledge Repository", "Technical Documentation"]
 
         try:
-            engine = GenerationEngine()
             model_name = os.getenv("DEFAULT_CLOUD_MODEL") or os.getenv("LLM_MODEL") or settings.DEFAULT_MODEL
-            print(f"[KBMetadataService] model_name={model_name}")
+            print(f"[KBMetadataService] Attempting LLM analysis with model={model_name}")
+
+            engine = GenerationEngine()
             response_text = await engine.generate(
                 model=model_name,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.2
             )
-            
+
             import re
             json_match = re.search(r'\{.*?\}', response_text, re.DOTALL)
             if json_match:
@@ -124,9 +134,9 @@ Provide a JSON object with exactly the following fields (nothing else, no format
                 kb_summary = data.get("kb_summary", kb_summary)
                 kb_topics = data.get("kb_topics", kb_topics)
                 major_themes = data.get("major_themes", major_themes)
+                print("[KBMetadataService] Successfully generated LLM summary for knowledge base.")
         except Exception as e:
-            print(f"[KBMetadataService] Error calling LLM to analyze KB: {e}")
-            traceback.print_exc()
+            print(f"[KBMetadataService] Note: LLM metadata generation unavailable ({e}). Using deterministic fallback metadata.")
 
         metadata = {
             "kb_name": kb_name,
@@ -150,4 +160,3 @@ Provide a JSON object with exactly the following fields (nothing else, no format
             print(f"[KBMetadataService] Saved metadata summary to {cls.METADATA_FILE}")
         except Exception as e:
             print(f"[KBMetadataService] Error writing metadata: {e}")
-

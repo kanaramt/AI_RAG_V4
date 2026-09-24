@@ -47,14 +47,26 @@ class ClaudeProvider(BaseLLMProvider):
                 })
         print(f"[CLAUDE] Model={self.model}")
         print(f"[CLAUDE] Messages={len(cleaned_messages)}")
+
+        create_kwargs: dict[str, Any] = {
+            "model": self.model,
+            "messages": cleaned_messages,
+            "system": system_prompt,
+            "max_tokens": max_tokens,
+        }
+
+        # Anthropic rules: omit temperature parameter for Opus 4.7+ and next-gen reasoning models
+        m_lower = self.model.lower()
+        is_fixed_temp_model = any(k in m_lower for k in [
+            "claude-opus-4-7",
+            "claude-opus-4-8",
+            "claude-opus-5",
+            "claude-sonnet-5",
+        ])
+        if not is_fixed_temp_model and temp is not None:
+            create_kwargs["temperature"] = temp
         
-        response = await self.client.messages.create(
-            model=self.model,
-            messages=cleaned_messages,
-            system=system_prompt,
-            temperature=temp,
-            max_tokens=max_tokens,
-        )
+        response = await self.client.messages.create(**create_kwargs)
         print("[CLAUDE] Response received")
         print(f"[CLAUDE] Response={response.content[0].text}")
         return response.content[0].text if response.content else ""
@@ -78,13 +90,24 @@ class ClaudeProvider(BaseLLMProvider):
                     "content": msg.get("content")
                 })
 
-        async with self.client.messages.stream(
-            model=self.model,
-            messages=cleaned_messages,
-            system=system_prompt,
-            temperature=temp,
-            max_tokens=max_tokens,
-        ) as stream:
+        stream_kwargs: dict[str, Any] = {
+            "model": self.model,
+            "messages": cleaned_messages,
+            "system": system_prompt,
+            "max_tokens": max_tokens,
+        }
+
+        m_lower = self.model.lower()
+        is_fixed_temp_model = any(k in m_lower for k in [
+            "claude-opus-4-7",
+            "claude-opus-4-8",
+            "claude-opus-5",
+            "claude-sonnet-5",
+        ])
+        if not is_fixed_temp_model and temp is not None:
+            stream_kwargs["temperature"] = temp
+
+        async with self.client.messages.stream(**stream_kwargs) as stream:
             async for text in stream.text_stream:
                 yield text
 

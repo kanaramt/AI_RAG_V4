@@ -26,6 +26,11 @@ class PostgresChatSync:
             )
 
             if existing:
+                if title:
+                    existing.title = title
+                if model:
+                    existing.model = model
+                db.commit()
                 return
 
             db.add(
@@ -47,12 +52,14 @@ class PostgresChatSync:
 
     @staticmethod
     def save_message(
-        message_id: str,
-        conversation_id: str,
-        sender: str,
-        text: str,
-        attachments=None,
-        citations=None,
+    message_id: str,
+    conversation_id: str,
+    sender: str,
+    text: str,
+    attachments=None,
+    citations=None,
+    suggestions=None,
+    metrics=None,
     ):
         db: Session = SessionLocal()
 
@@ -76,6 +83,8 @@ class PostgresChatSync:
                     text=text,
                     attachments=attachments,
                     citations=citations,
+                    suggestions=suggestions,
+                    metrics=metrics,
                 )
             )
 
