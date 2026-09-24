@@ -13,7 +13,7 @@ class APIKeysModel(BaseModel):
     gemini_api_key: str | None = ""
     grok_api_key: str | None = ""
     groq_api_key: str | None = ""
-    default_cloud_model: str | None = "gemini-2.5-flash"
+    default_cloud_model: str | None = "gpt-4o"
 
 
 class SystemSettingsModel(BaseModel):
@@ -101,7 +101,7 @@ async def get_centralized_settings():
     if env_file.exists():
         load_dotenv(env_file, override=True)
 
-    active_model = os.getenv("DEFAULT_CLOUD_MODEL") or os.getenv("LLM_MODEL") or os.getenv("CHAT_MODEL", "gemini-2.5-flash")
+    active_model = os.getenv("DEFAULT_CLOUD_MODEL") or os.getenv("LLM_MODEL") or os.getenv("CHAT_MODEL", settings.DEFAULT_MODEL)
     active_provider = os.getenv("DEFAULT_PROVIDER") or os.getenv("LLM_PROVIDER") or _infer_provider(active_model)
 
     openai_k = os.getenv("OPENAI_API_KEY", "")

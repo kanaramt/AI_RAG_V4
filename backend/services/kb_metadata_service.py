@@ -1,3 +1,4 @@
+import traceback
 import json
 import os
 import time
@@ -125,6 +126,7 @@ Provide a JSON object with exactly the following fields (nothing else, no format
                 major_themes = data.get("major_themes", major_themes)
         except Exception as e:
             print(f"[KBMetadataService] Error calling LLM to analyze KB: {e}")
+            traceback.print_exc()
 
         metadata = {
             "kb_name": kb_name,

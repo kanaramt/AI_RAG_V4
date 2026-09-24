@@ -42,16 +42,12 @@ class GroqProvider(BaseLLMProvider):
 
         print(f"[GROQ] Calling model={self.model}")
 
-        print(f"[GEMINI REST] Calling model={self.model}")
-
         async with httpx.AsyncClient(timeout=60.0) as client:
             resp = await client.post(
                 url,
-                params=params,
+                headers=headers,
                 json=payload
             )
-
-            print(f"[GEMINI REST] Status Code={resp.status_code}")
 
             print(f"[GROQ] Status Code={resp.status_code}")
 
