@@ -35,6 +35,9 @@ class OpenAIProvider(BaseLLMProvider):
         temp = kwargs.get("temperature", self.config.temperature)
         max_tokens = kwargs.get("max_tokens", self.config.max_tokens)
         
+        print(f"[OPENAI] Model={self.model}")
+        print(f"[OPENAI] API Key Present={bool(self.api_key)}")
+
         try:
             print(f"[OPENAI] Calling model={self.model}")
 
