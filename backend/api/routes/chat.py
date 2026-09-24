@@ -595,7 +595,7 @@ async def post_message(
             print(f"[Query Rewriter] Rewrote '{query}' -> '{rewritten_query}'")
         except Exception as e:
             print(f"[Query Rewriter] Error rewriting query: {e}")
-
+    num_docs = 0
     try:
         req = RetrievalRequest(
             query=rewritten_query,
@@ -874,7 +874,7 @@ async def post_message(
         traceback.print_exc()
         response_text = (
             f"⚠️ Error generating response from LLM (`{data.model}`): {str(e)}\n\n"
-            "Please check if the Ollama service is running locally (`ollama run llama3`) or if cloud API keys are configured in Settings."
+            "Failed to generate a response from the selected LLM. Please check the selected model and provider/API configuration in Settings."
         )
 
     # 10b. Generate context-aware follow-up suggestions (concurrent, non-blocking)
