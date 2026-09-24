@@ -596,6 +596,9 @@ async def post_message(
         except Exception as e:
             print(f"[Query Rewriter] Error rewriting query: {e}")
     num_docs = 0
+    best_score = 0.0
+    average_score = 0.0
+    relevant_chunks = []
     try:
         req = RetrievalRequest(
             query=rewritten_query,
