@@ -1,5 +1,3 @@
-from sentence_transformers import SentenceTransformer
-
 from services.embeddings.base_embedding import BaseEmbedding
 
 
@@ -15,6 +13,9 @@ class HuggingFaceEmbedding(BaseEmbedding):
     @property
     def model(self):
         if self._model is None:
+            # pyrefly: ignore [missing-import]
+            from sentence_transformers import SentenceTransformer
+
             self._model = SentenceTransformer(
                 self.model_name,
                 device="cpu",
