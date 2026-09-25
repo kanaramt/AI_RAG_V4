@@ -19,22 +19,22 @@ router = APIRouter()
 def classify_query(query: str, attachments: list) -> str:
     query_lower = query.lower().strip()
     query_clean = re.sub(r'[^\w\s]', '', query_lower).strip()
-    
+
     # 1. Unsafe Request
     unsafe_keywords = ["exploit", "hack", "bypass security", "illegal", "crack password"]
     if any(kw in query_clean for kw in unsafe_keywords):
         return "UNSAFE_REQUEST"
-        
+
     # 2. Token Optimisation checks (Acknowledgements)
     acknowledgements = {"thanks", "thank you", "okay", "ok", "sure", "done", "perfect", "got it", "understood", "yes", "no", "confirm", "cancel"}
     if query_clean in acknowledgements:
         return "CONVERSATIONAL"
-        
+
     # 3. Greeting
     greetings = {"hi", "hello", "hey", "good morning", "good afternoon", "good evening", "hola", "greetings", "yo"}
     if query_clean in greetings or query_clean.startswith("hey "):
         return "GREETING"
-        
+
     # 4. Small Talk
     small_talk = {
         "how are you", "what can you do", "who are you", "tell me about yourself",
@@ -43,42 +43,42 @@ def classify_query(query: str, attachments: list) -> str:
     }
     if query_clean in small_talk:
         return "SMALL_TALK"
-        
+
     # 5. Identity Questions
     identity = ["do you remember me", "who am i", "what's my name", "what is my name", "my name is", "i am", "do you know me", "do u know me"]
     if any(id_q in query_clean for id_q in identity):
         return "IDENTITY_QUESTIONS"
-        
+
     # 6. Conversation Follow-up
     follow_ups = ["explain again", "continue", "more details", "simplify this", "summarise above", "tell me more"]
     if any(f_u in query_clean for f_u in follow_ups):
         return "CONVERSATION_FOLLOW_UP"
-        
+
     # 7. Web Search
     web_keywords = ["search the web", "browse", "internet", "google search", "current weather", "latest news"]
     if any(wk in query_lower for wk in web_keywords):
         return "WEB_SEARCH"
-        
+
     # 8. Analytics Request
     analytics = ["chart", "plot", "eda", "statistics", "kpi", "graph", "dataframe analytics"]
     if any(an in query_lower for an in analytics):
         return "ANALYTICS_REQUEST"
-        
+
     # 9. Database Query
     db_keywords = ["select", "sql", "query database", "database table", "from table", "join", "group by", "order by", "where", "insert into", "create table"]
     if any(db in query_lower for db in db_keywords):
         return "DATABASE_QUERY"
-        
+
     # 10. Coding Request
     coding = [
-        "code", "python", "sql", "function", "class", "method", "import", "def", "script", 
-        "error", "exception", "debug", "compile", "run", "syntax", "js", "html", "css", 
+        "code", "python", "sql", "function", "class", "method", "import", "def", "script",
+        "error", "exception", "debug", "compile", "run", "syntax", "js", "html", "css",
         "binary search", "algorithm", "sort", "linked list", "tree", "array", "recursion",
         "write a python", "write python", "write code", "implement", "program", "developer"
     ]
     if any(cd in query_lower for cd in coding) or re.search(r'[{}\[\]();<>+=/*]', query):
         return "CODING_REQUEST"
-        
+
     # 11. Document Question (text files, PDFs, CSVs)
     if attachments and any(
         a.get('textContent') or
@@ -86,7 +86,7 @@ def classify_query(query: str, attachments: list) -> str:
         for a in attachments
     ):
         return "DOCUMENT_QUESTION"
-        
+
     # 12. Visual Analysis (Image snapshots only)
     if attachments and any(
         a.get('type', '').startswith('image/') or
@@ -94,18 +94,18 @@ def classify_query(query: str, attachments: list) -> str:
         for a in attachments
     ):
         return "VISUAL_ANALYSIS"
-        
+
     # 13. Company Knowledge
     company_keywords = ["policy", "leave", "onboarding", "hr", "benefits", "ABC Software", "office", "holiday"]
     if any(ck in query_lower for ck in company_keywords):
         return "COMPANY_KNOWLEDGE"
-        
+
     if len(query.split()) == 0:
         return "AMBIGUOUS_REQUEST"
-        
+
     if len(query.split()) < 5:
         return "SIMPLE_KNOWLEDGE"
-        
+
     return "TECHNICAL_KNOWLEDGE"
 
 def ocr_base64_image(data_url: str) -> str:
@@ -113,16 +113,16 @@ def ocr_base64_image(data_url: str) -> str:
         import numpy as np
         import cv2
         from services.document_intelligence import DocumentIntelligence
-        
+
         if "," in data_url:
             header, base64_data = data_url.split(",", 1)
         else:
             base64_data = data_url
-            
+
         image_bytes = base64.b64decode(base64_data)
         nparr = np.frombuffer(image_bytes, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        
+
         if img is not None:
             # Preserve resolution for high-DPI screenshots (up to 2500px)
             max_dim = 2500
@@ -130,11 +130,11 @@ def ocr_base64_image(data_url: str) -> str:
             if max(h, w) > max_dim:
                 scale = max_dim / max(h, w)
                 img = cv2.resize(img, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
-                
+
             reader = DocumentIntelligence.get_reader()
             results = reader.readtext(img)
             extracted = " ".join(t for _, t, _ in results)
-            
+
             # If standard OCR extracted minimal text, try contrast enhancement (CLAHE for dark mode/low contrast screenshots)
             if len(extracted.strip()) < 15:
                 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -144,7 +144,7 @@ def ocr_base64_image(data_url: str) -> str:
                 extracted_enh = " ".join(t for _, t, _ in res_enh)
                 if len(extracted_enh.strip()) > len(extracted.strip()):
                     extracted = extracted_enh
-                    
+
             if extracted.strip():
                 return f"[Extracted Image/Snapshot Text & Visual Code]:\n{extracted.strip()}"
     except Exception as e:
@@ -155,15 +155,15 @@ def extract_pdf_from_base64(data_url: str) -> str:
     try:
         import pypdf
         import io
-        
+
         if "," in data_url:
             header, base64_data = data_url.split(",", 1)
         else:
             base64_data = data_url
-            
+
         pdf_bytes = base64.b64decode(base64_data)
         pdf_file = io.BytesIO(pdf_bytes)
-        
+
         reader = pypdf.PdfReader(pdf_file)
         text_parts = []
         for page in reader.pages:
@@ -178,48 +178,48 @@ def extract_pdf_from_base64(data_url: str) -> str:
 
 async def extract_attachment_content(attach: dict) -> str:
     """
-    Extract text content from any frontend attachment (OCR for images/snapshots, 
+    Extract text content from any frontend attachment (OCR for images/snapshots,
     DocumentExtractor for PDF, DOCX, XLSX, PPTX, CSV, TXT, code files).
     """
     name = attach.get('name', 'attachment')
     text = attach.get('textContent')
     if text and text.strip():
         return text.strip()
-        
+
     data_url = attach.get('dataUrl')
     if not data_url:
         return ""
-        
+
     # Image snapshots / uploaded image files
     is_img = attach.get('type', '').startswith('image/') or name.lower().endswith(('.png', '.jpg', '.jpeg', '.webp', '.bmp', '.tiff', '.gif'))
     if is_img:
         import asyncio
         return await asyncio.to_thread(ocr_base64_image, data_url)
-        
+
     # Non-image files (PDF, DOCX, XLSX, PPTX, CSV, TXT, etc.)
     try:
         header, base64_data = data_url.split(",", 1) if "," in data_url else ("", data_url)
         file_bytes = base64.b64decode(base64_data)
-        
+
         import io
         from fastapi import UploadFile
         from services.document_intelligence import DocumentIntelligence
-        
+
         mock_file = UploadFile(
             filename=name,
             file=io.BytesIO(file_bytes)
         )
-        
+
         extracted = await DocumentIntelligence.extract_text(mock_file)
         if extracted and extracted.strip():
             return extracted.strip()
     except Exception as e:
         print(f"Error in DocumentIntelligence extraction for {name}: {e}")
-        
+
     # Fallback to PyPDF if PDF
     if name.lower().endswith('.pdf') or attach.get('type') == 'application/pdf':
         return extract_pdf_from_base64(data_url)
-        
+
     return ""
 
 
@@ -298,27 +298,27 @@ async def post_message(
 
     if not chat:
         raise HTTPException(status_code=404, detail="Chat not found")
-        
+
     history = memory.get_messages(chat_id)
     query = data.text
-    
+
     # Pipeline trace — collects each processing step for the frontend panel
     pipeline_trace = []
     # 1. Query Classification (Rule-based to prevent semantic latency/errors)
     query_clean = re.sub(r'[^\w\s]', '', query.lower()).strip()
-    
+
     is_greeting = query_clean in [
-        "hi", "hello", "hey", "good morning", "good evening", "good afternoon", 
-        "whats up", "howdy", "greetings", "thanks", "thank you", "okay", "ok", 
+        "hi", "hello", "hey", "good morning", "good evening", "good afternoon",
+        "whats up", "howdy", "greetings", "thanks", "thank you", "okay", "ok",
         "got it", "understood", "great", "awesome", "perfect"
     ]
-    
+
     # Robust help and capability request checking
     help_keywords = [
-        "how can you help", "what can you do", "what are your capabilities", 
-        "what do you do", "who are you", "how to use", "what is this app", 
-        "what is this assistant", "what topics do you cover", "what topics are covered", 
-        "what is this knowledge base about", "what is this kb about", 
+        "how can you help", "what can you do", "what are your capabilities",
+        "what do you do", "who are you", "how to use", "what is this app",
+        "what is this assistant", "what topics do you cover", "what topics are covered",
+        "what is this knowledge base about", "what is this kb about",
         "what documentation do you have", "what documents do you have",
         "what files do you have"
     ]
@@ -328,7 +328,7 @@ async def post_message(
                       "whatcanyoudo" in query_clean_no_spaces or \
                       "whatisthiskb" in query_clean_no_spaces or \
                       "whatareyourcapabilities" in query_clean_no_spaces
-    
+
     if not query.strip():
         detected_intent = "GREETING"
     elif data.attachments:
@@ -367,18 +367,18 @@ async def post_message(
         docs = memory.list_documents()
         doc_names = [d["name"] for d in docs] if docs else []
         kb_context = f"Indexed Documents in the Knowledge Base:\n" + ("\n".join(f"- {name}" for name in doc_names) if doc_names else "- No documents indexed yet.")
-        
+
         messages = [{"role": "system", "content": system_instruction}]
         for msg in history[-6:]:
             role = "user" if msg['sender'] == 'user' else "assistant"
             messages.append({"role": role, "content": msg['text']})
-            
+
         user_content = f"Context: This is a capability query. Here are the active files in the knowledge base:\n{kb_context}\n\nUser Question: {query}"
         messages.append({"role": "user", "content": user_content})
-        
+
         from engines.generation.generation_engine import GenerationEngine
         generation_engine = GenerationEngine()
-        
+
         try:
             response_text = await generation_engine.generate(
                 model=data.model,
@@ -413,7 +413,7 @@ async def post_message(
             text=response_text,
             citations=[]
         )
-        
+
         # Log decision path
         print("\n" + "="*50)
         print("--- STRICT RAG DEBUG LOG ---")
@@ -428,7 +428,7 @@ async def post_message(
         print(f"LLM Invoked (Yes/No): Yes")
         print(f"Final Response Path: Help Request -> Dynamic LLM-generated response based on KB registry")
         print("="*50 + "\n")
-        
+
         return assistant_msg
 
     # --- ROUTE 2: GREETING & SMALL_TALK INTENT ---
@@ -442,7 +442,7 @@ async def post_message(
                 "Hello! I am your knowledge base assistant.\n\n"
                 "I can help answer questions using information available in the current knowledge base."
             )
-            
+
         memory.add_message(conversation_id=chat_id, sender="user", text=query, attachments=data.attachments)
         assistant_msg = memory.add_message(
             conversation_id=chat_id,
@@ -450,7 +450,7 @@ async def post_message(
             text=response_text,
             citations=[]
         )
-        
+
         # Log decision path
         print("\n" + "="*50)
         print("--- STRICT RAG DEBUG LOG ---")
@@ -465,7 +465,7 @@ async def post_message(
         print(f"LLM Invoked (Yes/No): No")
         print(f"Final Response Path: Greeting / Small Talk -> Predefined Response")
         print("="*50 + "\n")
-        
+
         return assistant_msg
 
     # --- ROUTE 3: KNOWLEDGE_QUERY INTENT (Retrieval + Validation + Generation) ---
@@ -516,7 +516,7 @@ async def post_message(
     # Extract Frontend Attachments
     attachment_parts = []
     attachment_parts.extend(url_attached_parts)
-    
+
     for attach in data.attachments:
         extracted_text = await extract_attachment_content(attach)
         if extracted_text and extracted_text.strip():
@@ -532,7 +532,7 @@ async def post_message(
                 "score": 1.0,
                 "snippet": extracted_text.strip()[:300] + "..."
             })
-            
+
             # Auto-ingest into Knowledge Base
             try:
                 import asyncio
@@ -557,7 +557,7 @@ async def post_message(
             for msg in history[-5:]:
                 sender = "User" if msg['sender'] == 'user' else "Assistant"
                 history_str += f"{sender}: {msg['text']}\n"
-            
+
             rewrite_messages = [
                 {
                     "role": "system",
@@ -600,10 +600,22 @@ async def post_message(
     average_score = 0.0
     relevant_chunks = []
     try:
+        embedding_model = (
+            data.settings.get("embedding_model")
+            or data.settings.get("embeddingModel")
+        )
+
+        embedding_api_key = (
+            data.settings.get("embedding_api_key")
+            or data.settings.get("embeddingApiKey")
+        )
+
         req = RetrievalRequest(
             query=rewritten_query,
-            top_k=data.settings.get('topK', 3),
-            filters={}
+            top_k=data.settings.get("topK", 3),
+            filters={},
+            embedding_model=embedding_model,
+            embedding_api_key=embedding_api_key,
         )
         pipeline_trace.append({
             "step": 2,
@@ -611,11 +623,26 @@ async def post_message(
             "detail": f"Rewrote query to: '{rewritten_query}'",
             "status": "done"
         })
-        
+
         # Embedding preview
         try:
+            import os as _os
             from services.embedding_service import EmbeddingService
-            _emb_preview = EmbeddingService().generate_embedding(query)
+            _active_emb = (
+                data.settings.get("embedding_model")
+                or data.settings.get("embeddingModel")
+                or _os.getenv("ACTIVE_EMBEDDING_MODEL")
+            )
+
+            _embedding_key = (
+                data.settings.get("embedding_api_key")
+                or data.settings.get("embeddingApiKey")
+            )
+
+            _emb_preview = EmbeddingService(
+                model_name=_active_emb,
+                api_key=_embedding_key,
+            ).generate_embedding(query)
             emb_dims = len(_emb_preview) if _emb_preview else 0
             pipeline_trace.append({
                 "step": 3,
@@ -642,13 +669,13 @@ async def post_message(
         import os
         min_score = float(os.getenv("RETRIEVAL_MIN_SCORE", os.getenv("RETRIEVER_SIMILARITY", str(settings.RETRIEVAL_MIN_SCORE))))
         min_chunks = int(os.getenv("MIN_REQUIRED_CHUNKS", str(settings.MIN_REQUIRED_CHUNKS)))
-        
+
         best_score = 0.0
         average_score = 0.0
         if response_retrieval.documents:
             best_score = max(doc.score for doc in response_retrieval.documents)
             average_score = sum(doc.score for doc in response_retrieval.documents) / len(response_retrieval.documents)
-            
+
         relevant_chunks = [
             doc for doc in response_retrieval.documents
             if doc.score >= min_score
@@ -681,7 +708,7 @@ async def post_message(
                     temperature=0.0
                 )
                 print(f"[Retrieval Refinement] LLM call completed in {time.time() - t_ref_start:.2f} seconds. Result: '{refine_res}'")
-                
+
                 # Parse JSON array of alternative queries
                 alt_queries = []
                 try:
@@ -694,13 +721,13 @@ async def post_message(
                 except Exception as parse_err:
                     print(f"[Retrieval Refinement] JSON parse error: {parse_err}. Extracting strings.")
                     alt_queries = re.findall(r'"([^"]+)"', refine_res)
-                
+
                 print(f"[Retrieval Refinement] Generated alternate queries: {alt_queries}")
-                
+
                 # Fetch docs for each query and combine
                 combined_docs = list(response_retrieval.documents)
                 seen_ids = {doc.id for doc in combined_docs}
-                
+
                 import asyncio
                 from services.retrieval.strategies.hybrid_strategy import HybridStrategy
                 hybrid_strategy = HybridStrategy()
@@ -708,7 +735,9 @@ async def post_message(
                     hybrid_strategy.retrieve(RetrievalRequest(
                         query=alt_q,
                         top_k=data.settings.get('topK', 3),
-                        filters={}
+                        filters={},
+                        embedding_model=embedding_model,
+                        embedding_api_key=embedding_api_key,
                     ))
                     for alt_q in alt_queries[:3]
                 ]
@@ -721,11 +750,11 @@ async def post_message(
                         if doc.id not in seen_ids:
                             combined_docs.append(doc)
                             seen_ids.add(doc.id)
-                
+
                 # Re-sort combined documents by score descending
                 combined_docs.sort(key=lambda d: d.score, reverse=True)
                 response_retrieval.documents = combined_docs
-                
+
                 # Update best score and relevant chunks
                 if response_retrieval.documents:
                     best_score = max(doc.score for doc in response_retrieval.documents)
@@ -765,7 +794,7 @@ async def post_message(
                 "score": doc.score,
                 "snippet": display_snippet
             })
-            
+
         pipeline_trace.append({
             "step": 5,
             "label": "Context Assembly",
@@ -802,12 +831,12 @@ async def post_message(
         user_content = prompt_builder.build(query=query, context=combined_context, has_attachments=True)
     else:
         user_content = prompt_builder.build(query=query, context=retrieved_context_str, has_attachments=False)
-        
+
     messages.append({"role": "user", "content": user_content})
 
     from engines.generation.generation_engine import GenerationEngine
     generation_engine = GenerationEngine()
-    
+
     response_text = ""
     is_technical_error = False
     llm_step_num = len(pipeline_trace) + 1
@@ -817,7 +846,7 @@ async def post_message(
         "detail": f"Sending assembled context + query to model: {data.model}",
         "status": "running"
     })
-    
+
     try:
         print(f"[CHAT ROUTE] About to call LLM")
         print(f"[CHAT ROUTE] Model = {data.model}")
@@ -832,7 +861,7 @@ async def post_message(
         print(f"[CHAT ROUTE] Response Length = {len(response_text)}")
         pipeline_trace[-1]["status"] = "done"
         pipeline_trace[-1]["detail"] = f"LLM ({data.model}) generated response successfully"
-        
+
         # Clean up any prompt leakage or filler phrases from the output text dynamically
         leakage_phrases = [
             "I am a strict Enterprise Knowledge Base Assistant.",
@@ -848,11 +877,11 @@ async def post_message(
         ]
         for phrase in leakage_phrases:
             response_text = re.sub(re.escape(phrase) + r"\,?\s*", "", response_text, flags=re.IGNORECASE)
-            
+
         response_text = response_text.strip()
         if response_text and response_text[0].islower():
             response_text = response_text[0].upper() + response_text[1:]
-        
+
         # Log decision path
         print("\n" + "="*50)
         print("--- STRICT RAG DEBUG LOG ---")
@@ -867,7 +896,7 @@ async def post_message(
         print(f"LLM Invoked (Yes/No): Yes")
         print(f"Final Decision Path: KNOWLEDGE_QUERY -> Validated -> Answerability YES -> Synthesized Response")
         print("="*50 + "\n")
-        
+
     except Exception as e:
         is_technical_error = True
         pipeline_trace[-1]["status"] = "error"
@@ -917,8 +946,8 @@ async def post_message(
             model=data.model,
             messages=suggestion_messages,
             temperature=0.6,
-        )   
-        
+        )
+
         # Parse JSON safely
         import re as _re
         json_match = _re.search(r'\[.*?\]', suggestion_raw, _re.DOTALL)
@@ -926,7 +955,7 @@ async def post_message(
             import json as _json
             parsed = _json.loads(json_match.group())
             suggestions = [str(s).strip() for s in parsed if s][:3]
-        
+
         # Ensure at least 1 Google Search suggestion is present
         has_google_sug = any("search" in s.lower() or "google" in s.lower() for s in suggestions)
         if not has_google_sug:
@@ -952,14 +981,29 @@ async def post_message(
     try:
         from services.vector_store.qdrant_service import QdrantService
         from services.embedding_service import EmbeddingService
-        
-        qdrant_memory = QdrantService(collection_name="long_term_memory")
-        dialogue_content = f"User: {query}\nAssistant: {response_text}"
-        dialogue_emb = EmbeddingService().generate_embedding(dialogue_content)
-        
+        import os as _os
+
+        _active_emb = (
+            embedding_model
+            or _os.getenv("ACTIVE_EMBEDDING_MODEL")
+        )
+
+        qdrant_memory = QdrantService(
+            collection_name="long_term_memory"
+        )
+
+        dialogue_content = (
+            f"User: {query}\nAssistant: {response_text}"
+        )
+
+        dialogue_emb = EmbeddingService(
+            model_name=_active_emb,
+            api_key=embedding_api_key,
+        ).generate_embedding(dialogue_content)
+
         from uuid import uuid4
         dialogue_id = str(uuid4())
-        
+
         qdrant_memory.add_documents(
             ids=[dialogue_id],
             documents=[dialogue_content],
@@ -1113,7 +1157,7 @@ async def post_message(
             cid = c.get("id")
             if cid and str(cid) not in chunks_used_list:
                 chunks_used_list.append(str(cid))
-            
+
             meta_parts = []
             idx_val = c.get("chunk_index") or c.get("index")
             if idx_val is not None:

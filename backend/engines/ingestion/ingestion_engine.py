@@ -18,28 +18,64 @@ class IngestionEngine:
     """
 
     @staticmethod
-    async def ingest_file(file: Any, memory):
+    async def ingest_file(
+        file: Any,
+        memory,
+        embedding_model: str | None = None,
+        embedding_api_key: str | None = None,
+    ):
         """
         Ingest a file uploaded from the UI.
         """
-        return await IngestionService.ingest_upload(file, memory)
+        return await IngestionService.ingest_upload(
+            file,
+            memory,
+            embedding_model=embedding_model,
+            embedding_api_key=embedding_api_key,
+        )
 
     @staticmethod
-    async def ingest_local_file(file_path: Path, memory):
+    async def ingest_local_file(
+        file_path: Path,
+        memory,
+        embedding_model: str | None = None,
+        embedding_api_key: str | None = None,
+    ):
         """
         Ingest a file from the local knowledge base.
         """
-        return await IngestionService.ingest_local_file(file_path, memory)
+        return await IngestionService.ingest_local_file(
+            file_path,
+            memory,
+            embedding_model=embedding_model,
+            embedding_api_key=embedding_api_key,
+        )
 
     @staticmethod
-    async def ingest_url(url: str, memory):
+    async def ingest_url(
+        url: str,
+        memory,
+        embedding_model: str | None = None,
+        embedding_api_key: str | None = None,
+    ):
         """
         Ingest a web page.
         """
-        return await IngestionService.ingest_url(url, memory)
+        return await IngestionService.ingest_url(
+            url,
+            memory,
+            embedding_model=embedding_model,
+            embedding_api_key=embedding_api_key,
+        )
 
     @staticmethod
-    async def ingest_pasted_content(title: str, content: str, memory):
+    async def ingest_pasted_content(
+        title: str,
+        content: str,
+        memory,
+        embedding_model: str | None = None,
+        embedding_api_key: str | None = None,
+    ):
         """
         Ingest pasted text.
         """
@@ -47,4 +83,6 @@ class IngestionEngine:
             title,
             content,
             memory,
+            embedding_model=embedding_model,
+            embedding_api_key=embedding_api_key,
         )

@@ -326,7 +326,7 @@ function updateAPITabUI() {
     if (!config) return;
 
     // 1. Populate Submodels Dropdown
-    submodelSelect.innerHTML = config.models.map(m => 
+    submodelSelect.innerHTML = config.models.map(m =>
         `<option value="${m.id}">${m.label}</option>`
     ).join('');
 
@@ -381,7 +381,7 @@ async function loadCentralizedSettings() {
         const resp = await fetch('/api/settings');
         if (resp.ok) {
             const data = await resp.json();
-            
+
             if (data.active_model) {
                 state.selectedModel = data.active_model;
             }
@@ -489,128 +489,507 @@ async function saveAPIKeys() {
 // Embedding Models Management (OpenSource vs Paid & Custom Add)
 // ------------------------------------------------------------------
 
+// ------------------------------------------------------------------
+// Embedding Models Management
+// ------------------------------------------------------------------
+
 let availableEmbeddingModels = [];
 
+function getActiveEmbeddingConfig() {
+    const selectEl = document.getElementById(
+        'embedding-model-select'
+    );
+
+    const modelId =
+        selectEl?.value ||
+        null;
+
+    if (!modelId) {
+        return {
+            embedding_model: null,
+            embedding_api_key: null
+        };
+    }
+
+    const model =
+        availableEmbeddingModels.find(
+            item => item.id === modelId
+        );
+
+    const requiresApiKey =
+        model?.requires_api_key === true;
+
+    return {
+        embedding_model: modelId,
+        embedding_api_key: requiresApiKey
+            ? getStoredEmbeddingApiKey(modelId)
+            : null
+    };
+}
+
+const EMBEDDING_KEY_STORAGE_PREFIX = 'ai_rag_embedding_api_key:';
+
+function getEmbeddingKeyStorageName(modelId) {
+    return `${EMBEDDING_KEY_STORAGE_PREFIX}${encodeURIComponent(modelId)}`;
+}
+
+function getStoredEmbeddingApiKey(modelId) {
+    if (!modelId) return '';
+
+    try {
+        return sessionStorage.getItem(
+            getEmbeddingKeyStorageName(modelId)
+        ) || '';
+    } catch (err) {
+        console.warn('Embedding credential storage is unavailable.');
+        return '';
+    }
+}
+
+function storeEmbeddingApiKey(modelId, apiKey) {
+    if (!modelId) return;
+
+    try {
+        const storageName = getEmbeddingKeyStorageName(modelId);
+
+        if (apiKey && apiKey.trim()) {
+            sessionStorage.setItem(
+                storageName,
+                apiKey.trim()
+            );
+        } else {
+            sessionStorage.removeItem(storageName);
+        }
+    } catch (err) {
+        console.warn('Embedding credential could not be stored in session.');
+    }
+}
+
+function clearEmbeddingApiKey(modelId) {
+    if (!modelId) return;
+
+    try {
+        sessionStorage.removeItem(
+            getEmbeddingKeyStorageName(modelId)
+        );
+    } catch (err) {
+        // Ignore storage errors.
+    }
+}
+
+// ------------------------------------------------------------------
 // Load and populate Embedding Models in System Settings
+// ------------------------------------------------------------------
+
 async function loadEmbeddingModels() {
     try {
         const resp = await fetch('/api/settings/embeddings');
-        if (resp.ok) {
-            const data = await resp.json();
-            availableEmbeddingModels = data.models || [];
-            
-            const selectEl = document.getElementById('embedding-model-select');
-            if (selectEl) {
-                selectEl.innerHTML = availableEmbeddingModels.map(m => {
-                    const badge = m.type === 'paid' ? '💰 Paid API' : '⚡ OpenSource';
-                    return `<option value="${m.id}" ${m.id === data.active_model ? 'selected' : ''}>${m.name} (${badge} - ${m.provider})</option>`;
-                }).join('');
-                
-                updateEmbeddingModelDetailsCard(data.active_model);
-            }
+
+        if (!resp.ok) {
+            console.error(
+                'Failed to load embedding models:',
+                resp.status,
+                resp.statusText
+            );
+            return;
         }
+
+        const data = await resp.json();
+
+        availableEmbeddingModels = data.models || [];
+
+        const selectEl = document.getElementById(
+            'embedding-model-select'
+        );
+
+        if (!selectEl) return;
+
+        selectEl.innerHTML = availableEmbeddingModels
+            .map(model => {
+                let badge = 'Billing Unknown';
+
+                switch (model.billing) {
+                    case 'paid':
+                        badge = 'Paid API';
+                        break;
+
+                    case 'free_local':
+                        badge = 'Free Local';
+                        break;
+
+                    case 'free_quota':
+                        badge = 'Free Quota';
+                        break;
+                }
+
+                return `
+                    <option
+                        value="${escapeHTML(model.id)}"
+                        ${model.id === data.active_model ? 'selected' : ''}
+                    >
+                        ${escapeHTML(model.name)}
+                        (${badge} - ${escapeHTML(model.provider)})
+                    </option>
+                `;
+            })
+            .join('');
+
+        if (data.active_model) {
+            selectEl.value = data.active_model;
+        }
+
+        updateEmbeddingModelDetailsCard(
+            data.active_model || selectEl.value
+        );
     } catch (err) {
-        console.error("Failed to load embedding models:", err);
+        console.error(
+            'Failed to load embedding models:',
+            err
+        );
     }
 }
 
+// ------------------------------------------------------------------
 // Update Active Embedding Model Info Card
-function updateEmbeddingModelDetailsCard(modelId) {
-    const titleEl = document.getElementById('embed-detail-title');
-    const badgeEl = document.getElementById('embed-detail-badge');
-    const descEl = document.getElementById('embed-detail-desc');
-    const providerEl = document.getElementById('embed-detail-provider');
+// ------------------------------------------------------------------
 
-    const model = availableEmbeddingModels.find(m => m.id === modelId) || {
+function updateEmbeddingModelDetailsCard(modelId) {
+    const titleEl = document.getElementById(
+        'embed-detail-title'
+    );
+
+    const badgeEl = document.getElementById(
+        'embed-detail-badge'
+    );
+
+    const descEl = document.getElementById(
+        'embed-detail-desc'
+    );
+
+    const providerEl = document.getElementById(
+        'embed-detail-provider'
+    );
+
+    const keyWrapper = document.getElementById(
+        'active-embedding-key-wrapper'
+    );
+
+    const keyInput = document.getElementById(
+        'active-embedding-api-key'
+    );
+
+    const model = availableEmbeddingModels.find(
+        item => item.id === modelId
+    ) || {
         id: modelId,
-        name: modelId,
-        type: 'opensource',
-        provider: 'Local System',
+        name: modelId || 'Unknown',
+        provider: 'Unknown',
+        billing: 'unknown',
+        requires_api_key: false,
+        dims: null,
         desc: 'Vector embedding model'
     };
 
-    if (titleEl) titleEl.textContent = model.name;
-    if (descEl) descEl.textContent = model.desc || 'High accuracy vector embedding model.';
-    if (providerEl) providerEl.textContent = `Provider: ${model.provider}`;
+    const requiresApiKey = model.requires_api_key === true;
+
+    // --------------------------------------------------------------
+    // Model details
+    // --------------------------------------------------------------
+
+    if (titleEl) {
+        titleEl.textContent = model.name || model.id;
+    }
+
+    if (descEl) {
+        descEl.textContent =
+            model.desc ||
+            'High accuracy vector embedding model.';
+    }
+
+    if (providerEl) {
+        const dimensionText = model.dims
+            ? ` · ${model.dims}-dimensional`
+            : '';
+
+        providerEl.textContent =
+            `Provider: ${model.provider || 'Unknown'}${dimensionText}`;
+    }
+
+    // --------------------------------------------------------------
+    // Billing badge
+    // --------------------------------------------------------------
 
     if (badgeEl) {
-        if (model.type === 'paid') {
-            badgeEl.textContent = 'Paid (Cloud API)';
-            badgeEl.style.background = 'rgba(139, 92, 246, 0.15)';
-            badgeEl.style.color = 'var(--accent-purple,#8b5cf6)';
-            badgeEl.style.borderColor = 'rgba(139, 92, 246, 0.3)';
+        switch (model.billing) {
+            case 'paid':
+                badgeEl.textContent = 'Paid (Cloud API)';
+                badgeEl.style.background =
+                    'rgba(139, 92, 246, 0.15)';
+                badgeEl.style.color =
+                    'var(--accent-purple,#8b5cf6)';
+                badgeEl.style.borderColor =
+                    'rgba(139, 92, 246, 0.3)';
+                break;
+
+            case 'free_quota':
+                badgeEl.textContent = 'Free Quota';
+                badgeEl.style.background =
+                    'rgba(16, 185, 129, 0.15)';
+                badgeEl.style.color = '#10b981';
+                badgeEl.style.borderColor =
+                    'rgba(16, 185, 129, 0.3)';
+                break;
+
+            case 'free_local':
+                badgeEl.textContent = 'OpenSource (Local)';
+                badgeEl.style.background =
+                    'rgba(16, 185, 129, 0.15)';
+                badgeEl.style.color = '#10b981';
+                badgeEl.style.borderColor =
+                    'rgba(16, 185, 129, 0.3)';
+                break;
+
+            default:
+                badgeEl.textContent = 'Billing Unknown';
+                badgeEl.style.background =
+                    'rgba(148, 163, 184, 0.12)';
+                badgeEl.style.color =
+                    'var(--text-secondary)';
+                badgeEl.style.borderColor =
+                    'var(--border-color)';
+        }
+    }
+
+    // --------------------------------------------------------------
+    // API-key visibility
+    // --------------------------------------------------------------
+
+    if (keyWrapper) {
+        keyWrapper.classList.toggle(
+            'hidden',
+            !requiresApiKey
+        );
+    }
+
+    if (keyInput) {
+        if (requiresApiKey) {
+            keyInput.value =
+                getStoredEmbeddingApiKey(model.id);
         } else {
-            badgeEl.textContent = 'OpenSource (Local)';
-            badgeEl.style.background = 'rgba(16, 185, 129, 0.15)';
-            badgeEl.style.color = '#10b981';
-            badgeEl.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+            keyInput.value = '';
         }
     }
 }
 
+// ------------------------------------------------------------------
 // Activate Selected Embedding Model
+// ------------------------------------------------------------------
+
 async function activateEmbeddingModel() {
-    const selectEl = document.getElementById('embedding-model-select');
+    const selectEl = document.getElementById(
+        'embedding-model-select'
+    );
+
     if (!selectEl) return;
 
     const selectedId = selectEl.value;
-    try {
-        const resp = await fetch('/api/settings/embeddings/select', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model_id: selectedId })
-        });
-        if (resp.ok) {
-            showToast(`✅ Active embedding model updated to '${selectedId}'!`);
-            await loadEmbeddingModels();
-        } else {
-            showToast("⚠️ Failed to update embedding model.");
-        }
-    } catch (err) {
-        console.error("Error activating embedding model:", err);
+
+    const selectedModel =
+        availableEmbeddingModels.find(
+            model => model.id === selectedId
+        );
+
+    if (!selectedModel) {
+        showToast('⚠️ Selected embedding model is unavailable.');
+        return;
     }
-}
 
-// Register New Custom Embedding Model
-async function registerCustomEmbeddingModel() {
-    const nameInput = document.getElementById('custom-embed-name');
-    const providerSelect = document.getElementById('custom-embed-provider');
-    const apiKeyInput = document.getElementById('custom-embed-api-key');
-    const typeRadio = document.querySelector('input[name="custom-embed-type"]:checked');
+    const keyInput = document.getElementById(
+        'active-embedding-api-key'
+    );
 
-    const name = nameInput?.value.trim();
-    const provider = providerSelect?.value || 'Custom';
-    const type = typeRadio?.value || 'opensource';
-    const apiKey = apiKeyInput?.value.trim() || '';
+    const apiKey =
+        keyInput?.value.trim() || '';
 
-    if (!name) {
-        showToast("⚠️ Please enter a Model ID / Name.");
+    const requiresApiKey =
+        selectedModel.requires_api_key === true;
+
+    if (requiresApiKey && !apiKey) {
+        showToast(
+            '⚠️ API key is required for the selected embedding model.'
+        );
+
+        keyInput?.focus();
+
         return;
     }
 
     try {
-        const resp = await fetch('/api/settings/embeddings/add', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                name: name,
-                type: type,
-                provider: provider,
-                api_key: apiKey
-            })
-        });
+        const resp = await fetch(
+            '/api/settings/embeddings/select',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model_id: selectedId,
+                    api_key: requiresApiKey
+                        ? apiKey
+                        : null
+                })
+            }
+        );
 
-        if (resp.ok) {
-            showToast(`✅ Custom Embedding Model '${name}' registered and set active!`);
-            nameInput.value = '';
-            if (apiKeyInput) apiKeyInput.value = '';
-            document.getElementById('add-embedding-form-container')?.classList.add('hidden');
-            await loadEmbeddingModels();
-        } else {
-            showToast("⚠️ Failed to register embedding model.");
+        const result = await resp.json();
+
+        if (!resp.ok) {
+            const errorMessage =
+                result.detail ||
+                result.message ||
+                'Failed to activate embedding model.';
+
+            showToast(`⚠️ ${errorMessage}`);
+
+            return;
         }
+
+        // Store only in this browser session.
+        if (requiresApiKey) {
+            storeEmbeddingApiKey(
+                selectedId,
+                apiKey
+            );
+        } else {
+            clearEmbeddingApiKey(selectedId);
+        }
+
+        showToast(
+            `✅ Active embedding model updated to '${selectedId}'!`
+        );
+
+        await loadEmbeddingModels();
     } catch (err) {
-        console.error("Error registering custom embedding model:", err);
+        console.error(
+            'Error activating embedding model:',
+            err
+        );
+
+        showToast(
+            '⚠️ Error activating embedding model.'
+        );
+    }
+}
+
+// ------------------------------------------------------------------
+// Register New Custom Embedding Model
+// ------------------------------------------------------------------
+
+async function registerCustomEmbeddingModel() {
+    const nameInput = document.getElementById(
+        'custom-embed-name'
+    );
+
+    const providerSelect = document.getElementById(
+        'custom-embed-provider'
+    );
+
+    const apiKeyInput = document.getElementById(
+        'custom-embed-api-key'
+    );
+
+    const typeRadio = document.querySelector(
+        'input[name="custom-embed-type"]:checked'
+    );
+
+    const name =
+        nameInput?.value.trim();
+
+    const provider =
+        providerSelect?.value || 'Custom';
+
+    const type =
+        typeRadio?.value || 'opensource';
+
+    const apiKey =
+        apiKeyInput?.value.trim() || '';
+
+    if (!name) {
+        showToast(
+            '⚠️ Please enter a Model ID / Name.'
+        );
+
+        return;
+    }
+
+    try {
+        const resp = await fetch(
+            '/api/settings/embeddings/add',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name,
+                    type,
+                    provider,
+                    api_key: apiKey || null
+                })
+            }
+        );
+
+        const result = await resp.json();
+
+        if (!resp.ok) {
+            const errorMessage =
+                result.detail ||
+                result.message ||
+                'Failed to register embedding model.';
+
+            showToast(
+                `⚠️ ${errorMessage}`
+            );
+
+            return;
+        }
+
+        // Custom cloud-model credentials remain session-scoped.
+        if (apiKey) {
+            storeEmbeddingApiKey(
+                name,
+                apiKey
+            );
+        }
+
+        showToast(
+            `✅ Custom Embedding Model '${name}' registered and set active!`
+        );
+
+        if (nameInput) {
+            nameInput.value = '';
+        }
+
+        if (apiKeyInput) {
+            apiKeyInput.value = '';
+        }
+
+        document
+            .getElementById(
+                'add-embedding-form-container'
+            )
+            ?.classList.add('hidden');
+
+        await loadEmbeddingModels();
+    } catch (err) {
+        console.error(
+            'Error registering custom embedding model:',
+            err
+        );
+
+        showToast(
+            '⚠️ Error registering custom embedding model.'
+        );
     }
 }
 
@@ -735,7 +1114,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else {
         showWelcomeView();
     }
-    
+
     initIcons();
     setupEventListeners();
 
@@ -766,7 +1145,7 @@ function setupEventListeners() {
     toggleSidebarBtn.addEventListener('click', () => {
         const isCollapsed = appContainer.classList.toggle('sidebar-collapsed');
         toggleSidebarBtn.title = isCollapsed ? "Expand Sidebar" : "Collapse Sidebar";
-        
+
         if (topNewChatBtn) {
             if (isCollapsed) {
                 topNewChatBtn.classList.remove('hidden');
@@ -807,7 +1186,7 @@ function setupEventListeners() {
     // Auto-collapse sidebars when clicking anywhere on the chat window / main area
     document.addEventListener('click', (e) => {
         const sidebar = document.querySelector('.sidebar');
-        
+
         // Close RAG config drawer if click is outside drawer and its toggle button
         if (configDrawer.classList.contains('open') &&
             !configDrawer.contains(e.target) &&
@@ -854,7 +1233,7 @@ function setupEventListeners() {
             btn.addEventListener('click', () => {
                 settingsModal.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                 settingsModal.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-                
+
                 btn.classList.add('active');
                 const tabId = btn.getAttribute('data-tab');
                 const pane = document.getElementById(tabId);
@@ -1022,7 +1401,7 @@ function setupEventListeners() {
             const isMatch = item.getAttribute('data-search-mode') === mode;
             item.classList.toggle('active', isMatch);
         });
-        
+
         if (mode === 'web') {
             if (searchModeName) searchModeName.textContent = 'Web';
             if (searchModeIcon) {
@@ -1179,7 +1558,7 @@ function setupEventListeners() {
 }
 
 // Knowledge Source Tab Switcher
-window.switchKBSource = function(sourceType) {
+window.switchKBSource = function (sourceType) {
     document.querySelectorAll('.kb-source-selector .source-radio-btn').forEach(btn => {
         if (btn.getAttribute('data-source') === sourceType) {
             btn.classList.add('active');
@@ -1202,7 +1581,7 @@ window.switchKBSource = function(sourceType) {
 };
 
 // Website URL Loader Handler
-window.loadWebsiteURL = async function() {
+window.loadWebsiteURL = async function () {
     const urlInput = document.getElementById('kb-url-input');
     const loadBtn = document.getElementById('load-url-btn');
     const statsBanner = document.getElementById('url-ingest-stats');
@@ -1226,10 +1605,16 @@ window.loadWebsiteURL = async function() {
     if (statsBanner) statsBanner.classList.add('hidden');
 
     try {
+        const embeddingConfig = getActiveEmbeddingConfig();
+
         const resp = await fetch('/api/documents/url', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: url })
+            body: JSON.stringify({
+                url: url,
+                embedding_model: embeddingConfig.embedding_model,
+                embedding_api_key: embeddingConfig.embedding_api_key
+            })
         });
         const result = await resp.json();
 
@@ -1266,7 +1651,7 @@ window.loadWebsiteURL = async function() {
 };
 
 // Plain Text Paste Loader Handler
-window.loadPastedText = async function() {
+window.loadPastedText = async function () {
     const titleInput = document.getElementById('kb-paste-title');
     const contentInput = document.getElementById('kb-paste-content');
     if (!titleInput || !contentInput) return;
@@ -1280,10 +1665,17 @@ window.loadPastedText = async function() {
     }
 
     try {
+        const embeddingConfig = getActiveEmbeddingConfig();
+
         const resp = await fetch('/api/documents/paste', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, content })
+            body: JSON.stringify({
+                title,
+                content,
+                embedding_model: embeddingConfig.embedding_model,
+                embedding_api_key: embeddingConfig.embedding_api_key
+            })
         });
         if (resp.ok) {
             showToast(`✅ Indexed pasted document '${title}'!`);
@@ -1323,7 +1715,7 @@ async function selectModel(modelValue, saveToBackend = true, showNotify = true) 
     if (LEGACY_MODEL_MAP[modelValue]) {
         modelValue = LEGACY_MODEL_MAP[modelValue];
     }
-    
+
     state.selectedModel = modelValue;
     const providerKey = getProviderFromModel(modelValue);
     state.selectedProvider = providerKey;
@@ -1371,7 +1763,7 @@ async function selectModel(modelValue, saveToBackend = true, showNotify = true) 
             chat.model = modelValue;
             fetch(`/api/chats/${state.activeChatId}`, {
                 method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title: chat.title, model: modelValue })
             }).catch(err => console.error(err));
         }
@@ -1523,7 +1915,7 @@ function renderStagedFiles() {
 
         // Only render image thumbnail if it's actually an image type and not a document
         const isRealImage = file.type && file.type.startsWith('image/') && !['.pdf', '.docx', '.xlsx', '.pptx', '.csv', '.txt'].some(ext => file.name.toLowerCase().endsWith(ext));
-        
+
         if (isRealImage && file.dataUrl) {
             const img = document.createElement('img');
             img.src = file.dataUrl;
@@ -1604,7 +1996,7 @@ function handleWindowDrop(e) {
     e.preventDefault();
     dragCounter = 0;
     dragDropOverlay.classList.remove('active');
-    
+
     if (e.dataTransfer.files.length > 0) {
         Array.from(e.dataTransfer.files).forEach(addStagedFile);
         showToast(`Attached ${e.dataTransfer.files.length} drop files!`);
@@ -1631,9 +2023,25 @@ async function uploadDBDocuments(files) {
     files.forEach(f => formData.append('files', f));
     formData.append('chunk_size', 500);
     formData.append('chunk_overlap', 100);
-    
+
+    const embeddingConfig = getActiveEmbeddingConfig();
+
+    if (embeddingConfig.embedding_model) {
+        formData.append(
+            'embedding_model',
+            embeddingConfig.embedding_model
+        );
+    }
+
+    if (embeddingConfig.embedding_api_key) {
+        formData.append(
+            'embedding_api_key',
+            embeddingConfig.embedding_api_key
+        );
+    }
+
     showToast(`Uploading & indexing ${files.length} document(s)...`);
-    
+
     try {
         const response = await fetch('/api/documents/upload', {
             method: 'POST',
@@ -1641,7 +2049,7 @@ async function uploadDBDocuments(files) {
         });
         const results = await response.json();
         await fetchIndexedDocs();
-        
+
         const successCount = results.filter(r => r.status === 'indexed').length;
         showToast(`✅ Successfully indexed ${successCount} document(s) into knowledge base!`);
     } catch (e) {
@@ -1685,14 +2093,14 @@ async function clearEntireVectorDb() {
     if (!confirm('Are you absolutely sure you want to delete the entire vector database, including all documents, collections, local uploaded cache files, and crawler registries? This action cannot be undone.')) {
         return;
     }
-    
+
     const clearBtn = document.getElementById('clear-vdb-btn');
     if (clearBtn) {
         clearBtn.disabled = true;
         clearBtn.innerHTML = '<i data-lucide="loader-2" style="width:14px;height:14px;animation:spin 1s linear infinite;"></i> Clearing...';
         initIcons();
     }
-    
+
     showToast('🗑️ Purging entire database...');
     try {
         const response = await fetch('/api/documents', { method: 'DELETE' });
@@ -1720,31 +2128,31 @@ async function clearEntireVectorDb() {
 function renderIndexedDocsList() {
     indexedDocsList.innerHTML = '';
     indexedCountLabel.textContent = state.indexedDocuments.length;
-    
+
     state.indexedDocuments.forEach(doc => {
         const li = document.createElement('li');
         li.className = 'indexed-doc-item';
-        
+
         const infoDiv = document.createElement('div');
         infoDiv.className = 'indexed-doc-info';
-        
+
         const icon = document.createElement('i');
         icon.setAttribute('data-lucide', getFileIconName(doc.name));
         infoDiv.appendChild(icon);
-        
+
         const nameSpan = document.createElement('span');
         nameSpan.className = 'indexed-doc-name';
         nameSpan.textContent = doc.name;
         nameSpan.title = doc.name;
         infoDiv.appendChild(nameSpan);
-        
+
         li.appendChild(infoDiv);
-        
+
         const sizeSpan = document.createElement('span');
         sizeSpan.className = 'indexed-doc-size';
         sizeSpan.textContent = doc.size;
         li.appendChild(sizeSpan);
-        
+
         const delBtn = document.createElement('button');
         delBtn.className = 'indexed-doc-delete';
         delBtn.innerHTML = '<i data-lucide="trash-2"></i>';
@@ -1761,10 +2169,10 @@ function renderIndexedDocsList() {
             }
         });
         li.appendChild(delBtn);
-        
+
         indexedDocsList.appendChild(li);
     });
-    
+
     initIcons();
 }
 
@@ -1807,7 +2215,7 @@ async function loadChat(chatId) {
             throw new Error(`Failed to load messages (${response.status})`);
         }
         const messages = await response.json();
-        
+
         // Render Messages
         if (!Array.isArray(messages) || messages.length === 0) {
             showWelcomeView();
@@ -1815,7 +2223,7 @@ async function loadChat(chatId) {
             welcomeView.classList.add('hidden');
             messagesContainer.classList.remove('hidden');
             messagesContainer.innerHTML = '';
-            
+
             messages.forEach(msg => {
                 renderMessageBubble(msg);
             });
@@ -1839,7 +2247,7 @@ async function createNewChat() {
     try {
         const response = await fetch('/api/chats', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 title: 'Untitled Chat',
                 model: state.selectedModel
@@ -1855,14 +2263,14 @@ async function createNewChat() {
             showToast("Failed to create new chat: invalid server response");
             return;
         }
-        
+
         state.chats.unshift(newChat);
         state.activeChatId = newChat.id;
         localStorage.setItem('antigravity_rag_active_id', newChat.id);
-        
+
         renderRecentChatsList();
         await loadChat(newChat.id);
-        
+
         showToast("Created a new conversation panel");
         promptTextarea.focus();
     } catch (e) {
@@ -1873,11 +2281,11 @@ async function createNewChat() {
 
 async function deleteChat(chatId, e) {
     if (e) e.stopPropagation();
-    
+
     try {
         await fetch(`/api/chats/${chatId}`, { method: 'DELETE' });
         await fetchChats();
-        
+
         if (state.activeChatId === chatId) {
             if (state.chats.length > 0) {
                 loadChat(state.chats[0].id);
@@ -1893,11 +2301,11 @@ async function deleteChat(chatId, e) {
 
 async function renameChat(chatId, newTitle) {
     if (newTitle.trim().length === 0) return;
-    
+
     try {
         await fetch(`/api/chats/${chatId}`, {
             method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title: newTitle.trim() })
         });
         await fetchChats();
@@ -1908,7 +2316,7 @@ async function renameChat(chatId, newTitle) {
 
 function renderRecentChatsList() {
     sidebarList.innerHTML = '';
-    
+
     if (state.chats.length === 0) {
         const emptyState = document.createElement('div');
         emptyState.className = 'recent-chats-empty';
@@ -1936,7 +2344,7 @@ function renderRecentChatsList() {
 
         const textWrapper = document.createElement('div');
         textWrapper.className = 'chat-item-text-wrapper';
-        
+
         const titleSpan = document.createElement('span');
         titleSpan.className = 'chat-item-title';
         titleSpan.textContent = chat.title;
@@ -1947,7 +2355,7 @@ function renderRecentChatsList() {
         // Hover Action tools (Rename & Delete)
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'chat-item-actions';
-        
+
         const editBtn = document.createElement('button');
         editBtn.className = 'chat-action-btn edit-btn';
         editBtn.title = "Rename chat";
@@ -1991,17 +2399,17 @@ function renderRecentChatsList() {
 function toggleRenameMode(chatId, item, wrapper, span, actionsDiv) {
     if (item.classList.contains('editing')) return;
     item.classList.add('editing');
-    
+
     const currentText = span.textContent;
     wrapper.innerHTML = '';
     if (actionsDiv) actionsDiv.style.display = 'none';
-    
+
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'chat-title-input';
     input.value = currentText;
     wrapper.appendChild(input);
-    
+
     const editActions = document.createElement('div');
     editActions.style.display = 'flex';
     editActions.style.alignItems = 'center';
@@ -2078,20 +2486,20 @@ function scrollToBottom() {
 // Render Messages inside the Viewport container
 function renderMessageBubble(msg) {
     const isUser = msg.sender === 'user';
-    
+
     const msgDiv = document.createElement('div');
     msgDiv.className = `message ${isUser ? 'user-msg' : 'assistant-msg'}`;
     if (msg.id) {
         msgDiv.id = msg.id;
     }
-    
+
     const avatarContainer = document.createElement('div');
     avatarContainer.className = 'message-avatar-container';
-    
+
     const avatar = document.createElement('div');
     avatar.className = `msg-avatar ${isUser ? 'user' : 'assistant'}`;
     avatar.textContent = isUser ? 'K' : 'AI';
-    
+
     if (isUser) {
         const img = document.createElement('img');
         img.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80';
@@ -2100,12 +2508,12 @@ function renderMessageBubble(msg) {
     } else {
         avatarContainer.appendChild(avatar);
     }
-    
+
     msgDiv.appendChild(avatarContainer);
-    
+
     const contentWrapper = document.createElement('div');
     contentWrapper.className = 'message-content-wrapper';
-    
+
     const isWebSearch = !isUser && msg.text && (msg.text.includes('Web Search Results') || msg.text.includes('Google Search'));
     const senderSpan = document.createElement('span');
     senderSpan.className = 'message-sender';
@@ -2119,7 +2527,7 @@ function renderMessageBubble(msg) {
         senderSpan.textContent = 'AI Assistant';
     }
     contentWrapper.appendChild(senderSpan);
-    
+
     const bubble = document.createElement('div');
     bubble.className = 'message-bubble';
     bubble.innerHTML = renderMarkdown(msg.text);
@@ -2128,7 +2536,7 @@ function renderMessageBubble(msg) {
     // Add Action Bar (Edit, Copy, Re-search Web for User & Assistant)
     const actionDiv = document.createElement('div');
     actionDiv.className = 'msg-actions';
-    
+
     if (isUser) {
         const editBtn = document.createElement('button');
         editBtn.className = 'action-btn edit-msg-btn';
@@ -2169,7 +2577,7 @@ function renderMessageBubble(msg) {
                 showToast('Failed to copy text');
             });
         });
-        
+
         editBtn.addEventListener('click', () => {
             const originalText = msg.text;
             bubble.innerHTML = `
@@ -2182,28 +2590,28 @@ function renderMessageBubble(msg) {
                 </div>
             `;
             actionDiv.style.display = 'none';
-            
+
             bubble.querySelector('.btn-cancel').addEventListener('click', () => {
                 bubble.innerHTML = renderMarkdown(originalText);
                 actionDiv.style.display = 'block';
                 initIcons();
             });
-            
+
             bubble.querySelector('.btn-save').addEventListener('click', async () => {
                 const newText = bubble.querySelector('.edit-msg-textarea').value.trim();
                 if (newText.length === 0) return;
-                
+
                 const currentMsgId = msgDiv.id;
                 if (!currentMsgId || currentMsgId.startsWith('temp-user')) {
                     showToast("Please wait for response to finish before editing.");
                     return;
                 }
-                
+
                 try {
                     const response = await fetch(`/api/chats/${state.activeChatId}/messages/truncate/${currentMsgId}`, {
                         method: 'DELETE'
                     });
-                    
+
                     if (response.ok) {
                         promptTextarea.value = newText;
                         await loadChat(state.activeChatId);
@@ -2330,7 +2738,7 @@ function renderMessageBubble(msg) {
                 }
             });
         });
-        
+
         copyBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             copyToClipboard(msg.text).then(() => {
@@ -2362,7 +2770,7 @@ function renderMessageBubble(msg) {
     if (isUser && msg.attachments && msg.attachments.length > 0) {
         const attachContainer = document.createElement('div');
         attachContainer.className = 'bubble-attachments';
-        
+
         msg.attachments.forEach(file => {
             const isImage = file.type && file.type.startsWith('image/') && !['.pdf', '.docx', '.xlsx', '.pptx', '.csv', '.txt'].some(ext => file.name.toLowerCase().endsWith(ext));
             if (file.dataUrl && isImage) {
@@ -2381,21 +2789,21 @@ function renderMessageBubble(msg) {
             } else {
                 const pill = document.createElement('div');
                 pill.className = 'bubble-attachment-pill';
-                
+
                 const icon = document.createElement('i');
                 icon.setAttribute('data-lucide', getFileIconName(file.name));
                 pill.appendChild(icon);
-                
+
                 const name = document.createElement('span');
                 name.className = 'bubble-attachment-name';
                 name.textContent = file.name;
                 name.title = `${file.name} (${file.size})`;
                 pill.appendChild(name);
-                
+
                 attachContainer.appendChild(pill);
             }
         });
-        
+
         contentWrapper.appendChild(attachContainer);
     }
 
@@ -2403,7 +2811,7 @@ function renderMessageBubble(msg) {
     if (!isUser && msg.citations && msg.citations.length > 0) {
         const citationsWrapper = document.createElement('div');
         citationsWrapper.className = 'citations-wrapper';
-        
+
         const header = document.createElement('div');
         header.className = 'citations-header';
         header.innerHTML = `
@@ -2411,10 +2819,10 @@ function renderMessageBubble(msg) {
             <i data-lucide="chevron-down" class="citations-toggle-icon" style="width:14px;height:14px;"></i>
         `;
         citationsWrapper.appendChild(header);
-        
+
         const content = document.createElement('div');
         content.className = 'citations-content';
-        
+
         msg.citations.forEach((source, idx) => {
             const fileName = source.name || source.source || `Source ${idx + 1}`;
             const scoreVal = typeof source.score === 'number' ? source.score.toFixed(2) : (source.score || '--');
@@ -2432,13 +2840,13 @@ function renderMessageBubble(msg) {
             `;
             content.appendChild(card);
         });
-        
+
         citationsWrapper.appendChild(content);
-        
+
         header.addEventListener('click', () => {
             citationsWrapper.classList.toggle('open');
         });
-        
+
         contentWrapper.appendChild(citationsWrapper);
     }
 
@@ -2508,24 +2916,24 @@ function renderMessageBubble(msg) {
 
         contentWrapper.appendChild(metricsCard);
     }
-    
+
     // --- Suggestion Chips (ChatGPT-style follow-up suggestions & Google Search) ---
     if (!isUser && msg.suggestions && msg.suggestions.length > 0) {
         const suggestionsWrapper = document.createElement('div');
         suggestionsWrapper.className = 'suggestions-wrapper';
-        
+
         msg.suggestions.forEach(suggestion => {
             const chip = document.createElement('button');
             const isGoogleSearch = suggestion.includes('Search Google') || suggestion.includes('Search Web') || suggestion.startsWith('🌐');
             chip.className = `suggestion-chip ${isGoogleSearch ? 'google-search-chip' : ''}`;
-            
+
             let cleanText = suggestion.replace(/^🌐\s*/, '').replace(/^Search Google:\s*/i, '');
             if (isGoogleSearch) {
                 chip.innerHTML = `${getGoogleGSVG(13)} <span>Search Google: ${escapeHTML(cleanText)}</span>`;
             } else {
                 chip.innerHTML = `<span style="opacity:0.75; font-size:11px; font-weight:700;">↗</span> <span>${escapeHTML(suggestion)}</span>`;
             }
-            
+
             chip.addEventListener('click', () => {
                 if (isGoogleSearch) {
                     executeWebSearch(suggestion);
@@ -2542,17 +2950,17 @@ function renderMessageBubble(msg) {
             });
             suggestionsWrapper.appendChild(chip);
         });
-        
+
         contentWrapper.appendChild(suggestionsWrapper);
     }
-    
+
     msgDiv.appendChild(contentWrapper);
     messagesContainer.appendChild(msgDiv);
-    
+
     initIcons();
 }
 
-window.copyCodeBlock = function(id) {
+window.copyCodeBlock = function (id) {
     const codeElem = document.getElementById(id);
     if (codeElem) {
         const text = codeElem.textContent;
@@ -2587,17 +2995,17 @@ function syntaxHighlight(code, lang) {
     };
 
     const C = {
-        keyword:   (t) => wrap('hl-kw', t),
-        string:    (t) => wrap('hl-str', t),
-        comment:   (t) => wrap('hl-com', t),
-        number:    (t) => wrap('hl-num', t),
-        func:      (t) => wrap('hl-fn', t),
+        keyword: (t) => wrap('hl-kw', t),
+        string: (t) => wrap('hl-str', t),
+        comment: (t) => wrap('hl-com', t),
+        number: (t) => wrap('hl-num', t),
+        func: (t) => wrap('hl-fn', t),
         decorator: (t) => wrap('hl-dec', t),
-        builtin:   (t) => wrap('hl-bi', t),
-        operator:  (t) => wrap('hl-op', t),
-        tag:       (t) => wrap('hl-tag', t),
-        attr:      (t) => wrap('hl-attr', t),
-        variable:  (t) => wrap('hl-var', t),
+        builtin: (t) => wrap('hl-bi', t),
+        operator: (t) => wrap('hl-op', t),
+        tag: (t) => wrap('hl-tag', t),
+        attr: (t) => wrap('hl-attr', t),
+        variable: (t) => wrap('hl-var', t),
     };
 
     // Apply string literals first using protected placeholders
@@ -2618,10 +3026,10 @@ function syntaxHighlight(code, lang) {
     });
 
     const isPython = ['python', 'py'].includes(lang);
-    const isSql    = ['sql'].includes(lang);
-    const isJs     = ['javascript', 'js', 'typescript', 'ts', 'jsx', 'tsx'].includes(lang);
-    const isBash   = ['bash', 'shell', 'sh', 'zsh'].includes(lang);
-    const isJson   = ['json'].includes(lang);
+    const isSql = ['sql'].includes(lang);
+    const isJs = ['javascript', 'js', 'typescript', 'ts', 'jsx', 'tsx'].includes(lang);
+    const isBash = ['bash', 'shell', 'sh', 'zsh'].includes(lang);
+    const isJson = ['json'].includes(lang);
 
     if (isPython) {
         // Decorators
@@ -2716,7 +3124,7 @@ function cleanMarkdownArtifacts(str) {
 function renderMarkdown(text) {
     if (!text) return '';
     let html = text;
-    
+
     // 1. Preserve and replace pre-formatted code block markup ```lang ... ```
     const codeBlocks = [];
     html = html.replace(/```([a-zA-Z0-9+#._-]*)\n?([\s\S]*?)```/g, (match, lang, code) => {
@@ -2806,16 +3214,16 @@ function renderMarkdown(text) {
     const blocks = html.split('\n\n');
     html = blocks.map(p => {
         const trimmed = p.trim();
-        if (trimmed.startsWith('CBTOKENBLOCK') || 
-            trimmed.startsWith('<div class=') || 
-            trimmed.startsWith('<table') || 
-            trimmed.startsWith('<h1') || 
-            trimmed.startsWith('<h2') || 
-            trimmed.startsWith('<h3') || 
+        if (trimmed.startsWith('CBTOKENBLOCK') ||
+            trimmed.startsWith('<div class=') ||
+            trimmed.startsWith('<table') ||
+            trimmed.startsWith('<h1') ||
+            trimmed.startsWith('<h2') ||
+            trimmed.startsWith('<h3') ||
             trimmed.startsWith('<h4')) {
             return p;
         }
-        
+
         // Bullet list
         if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
             const items = trimmed.split(/\n[-*]\s+/).filter(Boolean).map(i => {
@@ -2833,7 +3241,7 @@ function renderMarkdown(text) {
             }).join('');
             return `<ol class="styled-numbered-list">${items}</ol>`;
         }
-        
+
         const content = p.replace(/\n/g, '<br>');
         return `<p>${content}</p>`;
     }).join('');
@@ -2847,7 +3255,7 @@ function renderMarkdown(text) {
 }
 
 function escapeHTML(str) {
-    return str.replace(/[&<>'"]/g, 
+    return str.replace(/[&<>'"]/g,
         tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
     );
 }
@@ -2855,7 +3263,7 @@ function escapeHTML(str) {
 // Execute Google / Web Search and render result directly in chat environment
 async function executeWebSearch(rawQuery, attachments = [], tempId = null) {
     if (!rawQuery) return;
-    
+
     // Clean query text (strip leading prefixes like '🌐 Search Google:', 'Search Web:', etc.)
     let query = rawQuery.replace(/^(🌐|🔍)?\s*(Search Google:|Search Web:)?\s*/i, '').trim();
     if (!query) query = rawQuery;
@@ -2866,7 +3274,7 @@ async function executeWebSearch(rawQuery, attachments = [], tempId = null) {
             const defaultTitle = 'Web Search: ' + query.substring(0, 20);
             const response = await fetch('/api/chats', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title: defaultTitle,
                     model: state.selectedModel
@@ -3027,7 +3435,7 @@ async function executeWebSearch(rawQuery, attachments = [], tempId = null) {
                 scrollToBottom();
                 return;
             }
-        } catch (e2) {}
+        } catch (e2) { }
     }
     scrollToBottom();
 }
@@ -3075,16 +3483,16 @@ function renderPipelineSteps(steps) {
         error: '<i data-lucide="alert-circle" style="width:13px;height:13px;color:#ef4444;flex-shrink:0;"></i>',
         skipped: '<i data-lucide="minus-circle" style="width:13px;height:13px;color:#64748b;flex-shrink:0;"></i>'
     };
-    
+
     pipelineTraceSteps.innerHTML = steps.map((s, i) => {
         let rawLabel = cleanMarkdownArtifacts(s.label || '');
         if (s.step && !rawLabel.toLowerCase().startsWith('step')) {
             rawLabel = `Step ${s.step}: ${rawLabel}`;
         }
-        
+
         let detailHTML = '';
         const detailStr = s.detail || '';
-        
+
         if (detailStr.includes('Question:') && detailStr.includes('Context:')) {
             const qMatch = detailStr.match(/Question:\s*([\s\S]*?)\s*Context:\s*([\s\S]*?)$/i);
             if (qMatch) {
@@ -3145,7 +3553,7 @@ if (pipelineCloseBtn) {
 
 // Close pipeline panel when clicking anywhere outside it (same as left/right side panes)
 document.addEventListener('click', (e) => {
-    if (pipelineTracePanel && 
+    if (pipelineTracePanel &&
         !pipelineTracePanel.classList.contains('hidden') &&
         !pipelineTracePanel.contains(e.target) &&
         // Don't close if clicking send button or prompt area (they trigger the panel)
@@ -3186,7 +3594,7 @@ async function sendMessage() {
             const defaultTitle = text.length > 0 ? (text.substring(0, 24) + (text.length > 24 ? '...' : '')) : 'Untitled Chat';
             const response = await fetch('/api/chats', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title: defaultTitle,
                     model: state.selectedModel
@@ -3279,7 +3687,7 @@ async function sendMessage() {
     try {
         const response = await fetch(`/api/chats/${state.activeChatId}/messages`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             signal: activeAbortController.signal,
             body: JSON.stringify({
                 text: text,
@@ -3289,7 +3697,7 @@ async function sendMessage() {
                 system_prompt: localStorage.getItem('rag_system_prompt')
             })
         });
-        
+
         const loadElem = document.getElementById(assistantBubbleId);
         if (loadElem) loadElem.remove();
 
@@ -3306,7 +3714,7 @@ async function sendMessage() {
         }
 
         const assistantMsg = await response.json();
-        
+
         const userMsgDiv = document.getElementById('temp-user-id');
         if (userMsgDiv && assistantMsg.user_message_id) {
             userMsgDiv.id = assistantMsg.user_message_id;
@@ -3366,7 +3774,7 @@ function openLightbox(dataUrl, name) {
     `;
     document.body.appendChild(overlay);
     initIcons();
-    
+
     overlay.querySelector('.lightbox-close').addEventListener('click', () => overlay.remove());
     overlay.addEventListener('click', (e) => {
         if (e.target === overlay || e.target.closest('.lightbox-close')) {
@@ -3381,19 +3789,19 @@ async function updatePerformanceSidebarStats() {
         const response = await fetch('/api/performance/stats');
         if (response.ok) {
             const data = await response.json();
-            
+
             const perfLatency = document.getElementById('perf-latency');
             const perfRelevance = document.getElementById('perf-relevance');
             const perfFaithfulness = document.getElementById('perf-faithfulness');
             const perfCorrectness = document.getElementById('perf-correctness');
             const perfCost = document.getElementById('perf-cost');
-            
+
             if (data.current && perfLatency && perfRelevance && perfFaithfulness && perfCorrectness && perfCost) {
                 const latency = Math.round(data.current.latency_ms || 0);
                 const relevance = Math.round((data.current.context_relevance ?? 0) * 100);
                 const faithfulness = Math.round((data.current.faithfulness ?? 0) * 100);
                 const correctness = Math.round((data.current.answer_relevance ?? 0) * 100);
-                
+
                 // Estimate token cost accurately based on model provider
                 let costStr = "$0.0000 (Local)";
                 const selModel = (state.selectedModel || '').toLowerCase();
@@ -3408,13 +3816,13 @@ async function updatePerformanceSidebarStats() {
                 } else if (selModel.includes('grok')) {
                     costStr = "$0.0020 (Est.)";
                 }
-                
+
                 perfLatency.textContent = `${latency} ms`;
                 perfRelevance.textContent = `${relevance} %`;
                 perfFaithfulness.textContent = `${faithfulness} %`;
                 perfCorrectness.textContent = `${correctness} %`;
                 perfCost.textContent = costStr;
-                
+
                 colorifyMetricText(perfRelevance, relevance);
                 colorifyMetricText(perfFaithfulness, faithfulness);
                 colorifyMetricText(perfCorrectness, correctness);
@@ -3442,36 +3850,36 @@ let floatingTooltip = null;
 function handleTextSelection(e) {
     const selection = window.getSelection();
     const selectedText = selection.toString().trim();
-    
+
     // Remove existing floating tooltip
     if (floatingTooltip) {
         floatingTooltip.remove();
         floatingTooltip = null;
     }
-    
+
     if (selectedText.length === 0) return;
-    
+
     try {
         const range = selection.getRangeAt(0);
         const container = range.commonAncestorContainer;
         const bubbleElement = container.nodeType === 3 ? container.parentNode.closest('.message-bubble') : container.closest('.message-bubble');
-        
+
         if (!bubbleElement || !bubbleElement.closest('.assistant-msg')) return;
-        
+
         const rect = range.getBoundingClientRect();
         if (rect.width === 0 || rect.height === 0) return;
-        
+
         floatingTooltip = document.createElement('div');
         floatingTooltip.className = 'selection-tooltip-btn';
         floatingTooltip.innerHTML = `<i data-lucide="corner-up-left" style="width:12px;height:12px;margin-right:4px;"></i> Quote Reply`;
         document.body.appendChild(floatingTooltip);
         initIcons();
-        
+
         floatingTooltip.style.position = 'fixed';
         floatingTooltip.style.left = `${rect.left + (rect.width / 2) - 45}px`;
         floatingTooltip.style.top = `${rect.top - 36}px`;
         floatingTooltip.style.zIndex = '99999';
-        
+
         floatingTooltip.addEventListener('mousedown', (ev) => {
             ev.preventDefault();
             ev.stopPropagation();
@@ -3480,7 +3888,7 @@ function handleTextSelection(e) {
             promptTextarea.focus();
             autoGrowTextarea();
             toggleSendButton();
-            
+
             selection.removeAllRanges();
             if (floatingTooltip) {
                 floatingTooltip.remove();
@@ -3496,7 +3904,7 @@ document.addEventListener('mouseup', handleTextSelection);
 document.addEventListener('selectionchange', handleTextSelection);
 
 // Global Platform Navigation Handler
-window.handleNavRoute = async function(route) {
+window.handleNavRoute = async function (route) {
     const navItems = document.querySelectorAll('.nav-item');
     const chatViewport = document.getElementById('chat-viewport');
     const platformViewport = document.getElementById('platform-viewport');
@@ -3689,7 +4097,7 @@ if (historySearchInput) {
             renderHistoryTableRows(allHistoryRecords);
             return;
         }
-        const filtered = allHistoryRecords.filter(r => 
+        const filtered = allHistoryRecords.filter(r =>
             (r.user_prompt || '').toLowerCase().includes(q) ||
             (r.retrieved_response || '').toLowerCase().includes(q) ||
             (r.llm_model || '').toLowerCase().includes(q) ||

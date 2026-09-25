@@ -63,6 +63,14 @@ async def lifespan(
         bind=engine,
     )
 
+    # Restore dynamically registered embedding models from DB (no API keys stored)
+    try:
+        from services.embeddings.embedding_registry import load_from_db
+        load_from_db()
+        safe_print("[Lifespan] Embedding model registry loaded from DB.")
+    except Exception as _emb_err:
+        safe_print(f"[Lifespan] Embedding registry load warning: {_emb_err}")
+
     # Populate default seed websites in DB if not exist
     db = SessionLocal()
     try:

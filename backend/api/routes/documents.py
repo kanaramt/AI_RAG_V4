@@ -16,9 +16,13 @@ router = APIRouter()
 class PasteSchema(BaseModel):
     title: str
     content: str
+    embedding_model: str | None = None
+    embedding_api_key: str | None = None
 
 class UrlSchema(BaseModel):
     url: str
+    embedding_model: str | None = None
+    embedding_api_key: str | None = None
 
 
 # --- Documents Endpoints ---
@@ -35,7 +39,9 @@ async def upload_documents(
     files: List[UploadFile] = File(...),
     chunk_size: int = Form(500),
     chunk_overlap: int = Form(100),
-    memory = Depends(get_memory)
+    embedding_model: str | None = Form(None),
+    embedding_api_key: str | None = Form(None),
+    memory = Depends(get_memory),
 ):
     """
     Upload a list of documents and index them in Qdrant and FAISS,
@@ -44,7 +50,12 @@ async def upload_documents(
     results = []
     for file in files:
         try:
-            res = await IngestionEngine.ingest_file(file, memory)
+            res = await IngestionEngine.ingest_file(
+                file,
+                memory,
+                embedding_model=embedding_model,
+                embedding_api_key=embedding_api_key,
+            )
             results.append({
                 "name": file.filename,
                 "status": "indexed"
@@ -70,7 +81,7 @@ async def delete_document(doc_id: str, memory = Depends(get_memory)):
     try:
         from services.vector_store.factory import VectorStoreFactory
         from qdrant_client.models import Filter, FieldCondition, MatchValue
-        
+
         vector_store = VectorStoreFactory.create()
         qdrant = vector_store.qdrant
         qdrant.client.delete(
@@ -136,9 +147,9 @@ async def delete_all_documents(
     try:
         from services.vector_store.factory import VectorStoreFactory
         from qdrant_client.models import VectorParams, Distance
-        
+
         vector_store = VectorStoreFactory.create()
-        
+
         # Purge Qdrant collection
         qdrant = vector_store.qdrant
         qdrant.client.recreate_collection(
@@ -206,7 +217,7 @@ async def delete_all_documents(
         from database.models.knowledge_asset import KnowledgeAssetModel
         from database.models.website_ingestion import CrawledWebsiteModel
         from database.models.document_model import DocumentModel
-        
+
         # Delete everything
         db.query(KnowledgeAssetModel).delete()
         db.query(CrawledWebsiteModel).delete()
@@ -239,6 +250,8 @@ async def paste_content(data: PasteSchema, memory = Depends(get_memory)):
     data.title,
     data.content,
     memory,
+    embedding_model=data.embedding_model,
+    embedding_api_key=data.embedding_api_key,
 )
     if not success:
         raise HTTPException(status_code=500, detail="Failed to index pasted content")
@@ -250,7 +263,12 @@ async def index_url(data: UrlSchema, memory = Depends(get_memory)):
     Validate, crawl, clean HTML, chunk, embed, and index a website URL into vector store.
     """
     try:
-        res = await IngestionEngine.ingest_url(data.url, memory)
+        res = await IngestionEngine.ingest_url(
+            data.url,
+            memory,
+            embedding_model=data.embedding_model,
+            embedding_api_key=data.embedding_api_key,
+        )
         return res
     except ValueError as val_err:
         raise HTTPException(status_code=400, detail=str(val_err))
@@ -280,4 +298,4 @@ async def sync_knowledge_base(memory = Depends(get_memory)):
     }
 
 
-    
+

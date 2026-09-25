@@ -1,27 +1,34 @@
 from services.embeddings.base_embedding import BaseEmbedding
-from services.embedding_service import EmbeddingService
+from settings import settings
 
 
 class OllamaEmbedding(BaseEmbedding):
-    """
-    Ollama embedding provider.
+    """Local Ollama embedding provider."""
 
-    Uses the existing EmbeddingService internally.
-    """
+    def __init__(self, model_name: str):
+        self.model_name = model_name
+        self._client = None
 
-    def __init__(self):
-        self.embedding_service = EmbeddingService()
+    @property
+    def client(self):
+        if self._client is None:
+            from ollama import Client
+            self._client = Client(
+                host=settings.OLLAMA_BASE_URL,
+                timeout=30.0,
+            )
+        return self._client
 
-    def generate_embedding(
-        self,
-        text: str,
-    ) -> list[float]:
+    def generate_embedding(self, text: str) -> list[float]:
+        return self.generate_embeddings([text])[0]
 
-        return self.embedding_service.generate_embedding(text)
+    def generate_embeddings(self, texts: list[str]) -> list[list[float]]:
+        if not texts:
+            return []
 
-    def generate_embeddings(
-        self,
-        texts: list[str],
-    ) -> list[list[float]]:
+        response = self.client.embed(
+            model=self.model_name,
+            input=texts,
+        )
 
-        return self.embedding_service.generate_embeddings(texts)
+        return response["embeddings"]

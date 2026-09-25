@@ -14,7 +14,8 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- highlight.js — Syntax Highlighting for code blocks -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <!-- Stylesheet -->
     <link rel="stylesheet" href="css/variables.css">
@@ -102,20 +103,24 @@
                             <i id="theme-icon" data-lucide="moon"></i>
                         </button>
 
-                        <div id="theme-dropdown-menu" class="model-dropdown-menu hidden" style="min-width: 140px; top: calc(100% + 8px); bottom: auto; right: 0; left: auto;">
+                        <div id="theme-dropdown-menu" class="model-dropdown-menu hidden"
+                            style="min-width: 140px; top: calc(100% + 8px); bottom: auto; right: 0; left: auto;">
                             <div class="dropdown-group-title">Theme Preference</div>
                             <div class="dropdown-item active" data-theme-val="dark">
-                                <i data-lucide="moon" style="width: 14px; height: 14px; margin-right: 6px; color: #a78bfa;"></i>
+                                <i data-lucide="moon"
+                                    style="width: 14px; height: 14px; margin-right: 6px; color: #a78bfa;"></i>
                                 <span class="item-title">Dark</span>
                                 <i data-lucide="check" class="check-icon"></i>
                             </div>
                             <div class="dropdown-item" data-theme-val="light">
-                                <i data-lucide="sun" style="width: 14px; height: 14px; margin-right: 6px; color: #f59e0b;"></i>
+                                <i data-lucide="sun"
+                                    style="width: 14px; height: 14px; margin-right: 6px; color: #f59e0b;"></i>
                                 <span class="item-title">Light</span>
                                 <i data-lucide="check" class="check-icon"></i>
                             </div>
                             <div class="dropdown-item" data-theme-val="system">
-                                <i data-lucide="laptop" style="width: 14px; height: 14px; margin-right: 6px; color: #3b82f6;"></i>
+                                <i data-lucide="laptop"
+                                    style="width: 14px; height: 14px; margin-right: 6px; color: #3b82f6;"></i>
                                 <span class="item-title">System</span>
                                 <i data-lucide="check" class="check-icon"></i>
                             </div>
@@ -127,13 +132,16 @@
                         <i data-lucide="history"></i>
                     </button>
 
-                    <button id="view-performance-btn" class="icon-btn" title="AI RAG Performance Monitor" onclick="window.location.href='/performance'">
+                    <button id="view-performance-btn" class="icon-btn" title="AI RAG Performance Monitor"
+                        onclick="window.location.href='/performance'">
                         <i data-lucide="activity"></i>
                     </button>
-                    <button id="view-dataset-btn" class="icon-btn" title="RAG Learning & Retrieval Feedback Manager" onclick="window.location.href='/dataset'">
+                    <button id="view-dataset-btn" class="icon-btn" title="RAG Learning & Retrieval Feedback Manager"
+                        onclick="window.location.href='/dataset'">
                         <i data-lucide="brain-circuit"></i>
                     </button>
-                    <button id="view-crawler-btn" class="icon-btn" title="Website Knowledge Crawler" onclick="window.location.href='/website'">
+                    <button id="view-crawler-btn" class="icon-btn" title="Website Knowledge Crawler"
+                        onclick="window.location.href='/website'">
                         <i data-lucide="globe"></i>
                     </button>
 
@@ -157,11 +165,13 @@
                         </button>
                         <div class="history-view-title">
                             <h2>Chat History & Retrieval Analytics</h2>
-                            <span class="history-view-subtitle">Relational DB records for prompts, responses, metrics, sources, and similarity scores</span>
+                            <span class="history-view-subtitle">Relational DB records for prompts, responses, metrics,
+                                sources, and similarity scores</span>
                         </div>
                     </div>
                     <div class="history-header-actions">
-                        <a href="/api/history/csv" download="chat_history_analytics.csv" id="download-csv-btn" class="btn btn-primary download-csv-btn">
+                        <a href="/api/history/csv" download="chat_history_analytics.csv" id="download-csv-btn"
+                            class="btn btn-primary download-csv-btn">
                             <i data-lucide="download"></i>
                             <span>Export CSV</span>
                         </a>
@@ -175,7 +185,8 @@
                 <div class="history-filter-bar">
                     <div class="history-search-input-wrapper">
                         <i data-lucide="search" class="history-search-icon"></i>
-                        <input type="text" id="history-search-input" placeholder="Search history by prompt, response, model, file, or metrics..." />
+                        <input type="text" id="history-search-input"
+                            placeholder="Search history by prompt, response, model, file, or metrics..." />
                     </div>
                     <span id="history-record-count" class="history-record-count">0 Records</span>
                 </div>
@@ -316,51 +327,55 @@
                                         <div class="dropdown-item" data-value="claude-3-5-sonnet">
                                             <div class="item-text">
                                                 <span class="item-title">claude-3-5-sonnet</span>
-                                                <span class="item-desc">State of the art reasoning & coding capability</span>
+                                                <span class="item-desc">State of the art reasoning & coding
+                                                    capability</span>
                                             </div>
                                             <i data-lucide="check" class="check-icon"></i>
                                         </div>
                                         <div class="dropdown-item" data-value="gemini-2.5-flash">
-                                             <div class="item-text">
-                                                 <span class="item-title">gemini-2.5-flash (Google)</span>
-                                                 <span class="item-desc">Next-Gen Multimodal Fast Inference</span>
-                                             </div>
-                                             <i data-lucide="check" class="check-icon"></i>
-                                         </div>
-                                         <div class="dropdown-item" data-value="gemini-2.0-flash-lite">
-                                             <div class="item-text">
-                                                 <span class="item-title">gemini-2.0-flash-lite (Google)</span>
-                                                 <span class="item-desc">Ultra-lightweight high speed model</span>
-                                             </div>
-                                             <i data-lucide="check" class="check-icon"></i>
-                                         </div>
+                                            <div class="item-text">
+                                                <span class="item-title">gemini-2.5-flash (Google)</span>
+                                                <span class="item-desc">Next-Gen Multimodal Fast Inference</span>
+                                            </div>
+                                            <i data-lucide="check" class="check-icon"></i>
+                                        </div>
+                                        <div class="dropdown-item" data-value="gemini-2.0-flash-lite">
+                                            <div class="item-text">
+                                                <span class="item-title">gemini-2.0-flash-lite (Google)</span>
+                                                <span class="item-desc">Ultra-lightweight high speed model</span>
+                                            </div>
+                                            <i data-lucide="check" class="check-icon"></i>
+                                        </div>
                                         <div class="dropdown-item" data-value="grok-beta">
-                                             <div class="item-text">
-                                                 <span class="item-title">grok-beta (xAI)</span>
-                                                 <span class="item-desc">xAI Grok frontier model</span>
-                                             </div>
-                                             <i data-lucide="check" class="check-icon"></i>
-                                         </div>
-                                         <div class="dropdown-item" data-value="llama-3.3-70b-versatile">
-                                             <div class="item-text">
-                                                 <span class="item-title">llama-3.3-70b (Groq)</span>
-                                                 <span class="item-desc">Ultra-fast Groq Cloud LLaMA 3.3 70B</span>
-                                             </div>
-                                             <i data-lucide="check" class="check-icon"></i>
-                                         </div>
+                                            <div class="item-text">
+                                                <span class="item-title">grok-beta (xAI)</span>
+                                                <span class="item-desc">xAI Grok frontier model</span>
+                                            </div>
+                                            <i data-lucide="check" class="check-icon"></i>
+                                        </div>
+                                        <div class="dropdown-item" data-value="llama-3.3-70b-versatile">
+                                            <div class="item-text">
+                                                <span class="item-title">llama-3.3-70b (Groq)</span>
+                                                <span class="item-desc">Ultra-fast Groq Cloud LLaMA 3.3 70B</span>
+                                            </div>
+                                            <i data-lucide="check" class="check-icon"></i>
+                                        </div>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Search Mode Selection Pill Button (Local vs Web) -->
                                 <div class="search-mode-wrapper" style="position: relative;">
-                                    <button id="search-mode-btn" class="model-pill-btn search-mode-btn" title="Select Search Source Mode">
-                                        <i data-lucide="database" id="search-mode-icon" style="width:13px;height:13px;color:var(--accent-purple,#8b5cf6);"></i>
+                                    <button id="search-mode-btn" class="model-pill-btn search-mode-btn"
+                                        title="Select Search Source Mode">
+                                        <i data-lucide="database" id="search-mode-icon"
+                                            style="width:13px;height:13px;color:var(--accent-purple,#8b5cf6);"></i>
                                         <span id="search-mode-name">Local</span>
                                         <i data-lucide="chevron-down" class="pill-chevron"></i>
                                     </button>
 
                                     <!-- Custom popup menu that floats upwards -->
-                                    <div id="search-mode-dropdown-menu" class="model-dropdown-menu hidden" style="min-width: 160px;">
+                                    <div id="search-mode-dropdown-menu" class="model-dropdown-menu hidden"
+                                        style="min-width: 160px;">
                                         <div class="dropdown-group-title">Search Source</div>
                                         <div class="dropdown-item active" data-search-mode="local">
                                             <div class="item-text">
@@ -371,8 +386,19 @@
                                         </div>
                                         <div class="dropdown-item" data-search-mode="web">
                                             <div class="item-text">
-                                                <span class="item-title" style="display:inline-flex;align-items:center;gap:6px;">
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" style="vertical-align:middle;"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                                                <span class="item-title"
+                                                    style="display:inline-flex;align-items:center;gap:6px;">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24"
+                                                        style="vertical-align:middle;">
+                                                        <path fill="#4285F4"
+                                                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                                                        <path fill="#34A853"
+                                                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                                                        <path fill="#FBBC05"
+                                                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                                                        <path fill="#EA4335"
+                                                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                                                    </svg>
                                                     Web
                                                 </span>
                                                 <span class="item-desc">Search live Google & Web for prompt</span>
@@ -383,7 +409,8 @@
                                 </div>
 
                                 <!-- VectorDB Refresh Button -->
-                                <button id="vectordb-refresh-btn" class="toolbar-action-btn vectordb-refresh-btn" title="Refresh Vector DB index">
+                                <button id="vectordb-refresh-btn" class="toolbar-action-btn vectordb-refresh-btn"
+                                    title="Refresh Vector DB index">
                                     <i data-lucide="database-zap"></i>
                                 </button>
                             </div>
@@ -404,12 +431,14 @@
                 <div id="pipeline-trace-panel" class="pipeline-trace-panel hidden">
                     <div class="pipeline-trace-header" id="pipeline-trace-toggle">
                         <div class="pipeline-trace-title">
-                            <i data-lucide="activity" style="width:13px;height:13px;color:#a78bfa;margin-right:6px;"></i>
+                            <i data-lucide="activity"
+                                style="width:13px;height:13px;color:#a78bfa;margin-right:6px;"></i>
                             <span>Pipeline Trace</span>
                             <span id="pipeline-trace-status" class="pipeline-trace-status-badge"></span>
                         </div>
                         <div style="display:flex;align-items:center;gap:6px;">
-                            <i data-lucide="chevron-up" class="pipeline-chevron-icon" style="width:13px;height:13px;"></i>
+                            <i data-lucide="chevron-up" class="pipeline-chevron-icon"
+                                style="width:13px;height:13px;"></i>
                             <button class="pipeline-close-btn" id="pipeline-close-btn" title="Close pipeline panel">
                                 <i data-lucide="x" style="width:12px;height:12px;"></i>
                             </button>
@@ -476,8 +505,8 @@
                     <h3 style="display:flex;align-items:center;justify-content:space-between;">
                         Current Performance
                         <a href="/performance" target="_blank" rel="noopener"
-                           style="font-size:11px;font-weight:500;color:var(--accent-purple,#8b5cf6);display:inline-flex;align-items:center;gap:4px;text-decoration:none;opacity:0.85;"
-                           title="Open full Performance Dashboard">
+                            style="font-size:11px;font-weight:500;color:var(--accent-purple,#8b5cf6);display:inline-flex;align-items:center;gap:4px;text-decoration:none;opacity:0.85;"
+                            title="Open full Performance Dashboard">
                             View Full ↗
                         </a>
                     </h3>
@@ -536,7 +565,8 @@
                         <div id="tab-documents" class="tab-pane active">
                             <!-- Knowledge Source Selector Options -->
                             <div class="kb-source-selector">
-                                <label class="source-radio-btn active" data-source="file" onclick="switchKBSource('file')">
+                                <label class="source-radio-btn active" data-source="file"
+                                    onclick="switchKBSource('file')">
                                     <input type="radio" name="kb-source" value="file" checked>
                                     <i data-lucide="file-up"></i> Upload Files
                                 </label>
@@ -568,14 +598,16 @@
                                     <div class="url-input-group">
                                         <div class="url-input-wrapper">
                                             <i data-lucide="globe" class="url-input-icon"></i>
-                                            <input type="url" id="kb-url-input" placeholder="https://docs.langchain.com/oss/python/deepagents/overview" />
+                                            <input type="url" id="kb-url-input"
+                                                placeholder="https://docs.langchain.com/oss/python/deepagents/overview" />
                                         </div>
                                         <button id="load-url-btn" class="btn-load-url" onclick="loadWebsiteURL()">
                                             <i data-lucide="download-cloud" style="width:14px;height:14px;"></i>
                                             <span>Load Website</span>
                                         </button>
                                     </div>
-                                    <span class="url-input-hint">Extracts webpage text, strips navs/ads/scripts, chunks, generates embeddings, and indexes to Vector DB.</span>
+                                    <span class="url-input-hint">Extracts webpage text, strips navs/ads/scripts, chunks,
+                                        generates embeddings, and indexes to Vector DB.</span>
                                 </div>
 
                                 <!-- Progress & Vector DB Status Banner -->
@@ -605,8 +637,12 @@
                             <div id="source-pane-paste" class="source-pane hidden">
                                 <div class="url-ingest-box">
                                     <label class="url-input-label">Paste Raw Document Text</label>
-                                    <input type="text" id="kb-paste-title" placeholder="Document Title (e.g. System Architecture Policy)" style="width:100%;margin-bottom:8px;padding:8px 12px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);font-size:13px;" />
-                                    <textarea id="kb-paste-content" rows="4" placeholder="Paste your raw text content here..." style="width:100%;margin-bottom:8px;padding:8px 12px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);font-size:13px;resize:vertical;"></textarea>
+                                    <input type="text" id="kb-paste-title"
+                                        placeholder="Document Title (e.g. System Architecture Policy)"
+                                        style="width:100%;margin-bottom:8px;padding:8px 12px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);font-size:13px;" />
+                                    <textarea id="kb-paste-content" rows="4"
+                                        placeholder="Paste your raw text content here..."
+                                        style="width:100%;margin-bottom:8px;padding:8px 12px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);font-size:13px;resize:vertical;"></textarea>
                                     <button class="btn-load-url" onclick="loadPastedText()">
                                         <i data-lucide="plus-circle" style="width:14px;height:14px;"></i>
                                         <span>Index Pasted Text</span>
@@ -615,14 +651,23 @@
                             </div>
 
                             <!-- Sync & Clear buttons -->
-                            <div style="display:flex; align-items:center; justify-content:space-between; margin: 12px 0 4px;">
-                                <div class="indexed-docs-title" style="margin:0;">Indexed Documents (<span id="indexed-count">0</span>)</div>
+                            <div
+                                style="display:flex; align-items:center; justify-content:space-between; margin: 12px 0 4px;">
+                                <div class="indexed-docs-title" style="margin:0;">Indexed Documents (<span
+                                        id="indexed-count">0</span>)</div>
                                 <div style="display:flex; gap:8px; align-items:center;">
-                                    <button id="sync-kb-btn" onclick="syncKnowledgeBase()" title="Scan backend/data/ folder and index new files" style="display:flex;align-items:center;gap:6px;font-size:12px;padding:6px 12px;background:linear-gradient(135deg,#6c63ff,#8b80ff);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:500;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                                    <button id="sync-kb-btn" onclick="syncKnowledgeBase()"
+                                        title="Scan backend/data/ folder and index new files"
+                                        style="display:flex;align-items:center;gap:6px;font-size:12px;padding:6px 12px;background:linear-gradient(135deg,#6c63ff,#8b80ff);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:500;transition:opacity 0.2s;"
+                                        onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
                                         <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> Sync from data/
                                     </button>
-                                    <button id="clear-vdb-btn" onclick="clearEntireVectorDb()" title="Delete all indexed documents, vectors, and uploads" style="display:flex;align-items:center;gap:6px;font-size:12px;padding:6px 12px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:500;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-                                        <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Clear Entire Vector DB
+                                    <button id="clear-vdb-btn" onclick="clearEntireVectorDb()"
+                                        title="Delete all indexed documents, vectors, and uploads"
+                                        style="display:flex;align-items:center;gap:6px;font-size:12px;padding:6px 12px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:500;transition:opacity 0.2s;"
+                                        onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                                        <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Clear Entire
+                                        Vector DB
                                     </button>
                                 </div>
                             </div>
@@ -634,28 +679,41 @@
                         <!-- System Prompt Tab Content -->
                         <div id="tab-system-prompt" class="tab-pane">
                             <div class="parameter-control" style="margin-bottom: 16px;">
-                                <label for="val-system-prompt" style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px;">System Instructions</label>
-                                <textarea id="val-system-prompt" style="width: 100%; min-height: 120px; background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; color: var(--text-primary); font-size: 13px; outline: none; resize: vertical; line-height: 1.5;" placeholder="Enter model instructions..."></textarea>
-                                <span class="parameter-desc" style="display: block; font-size: 11px; color: var(--text-muted); margin-top: 6px;">Modify model behavior, identity, constraints, or instructions.</span>
+                                <label for="val-system-prompt"
+                                    style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px;">System
+                                    Instructions</label>
+                                <textarea id="val-system-prompt"
+                                    style="width: 100%; min-height: 120px; background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; color: var(--text-primary); font-size: 13px; outline: none; resize: vertical; line-height: 1.5;"
+                                    placeholder="Enter model instructions..."></textarea>
+                                <span class="parameter-desc"
+                                    style="display: block; font-size: 11px; color: var(--text-muted); margin-top: 6px;">Modify
+                                    model behavior, identity, constraints, or instructions.</span>
                             </div>
-                            <button id="save-system-prompt-btn" class="btn btn-primary" style="margin-top: 10px; padding: 8px 16px; font-size: 13px; font-weight: 500;">Save Instructions</button>
+                            <button id="save-system-prompt-btn" class="btn btn-primary"
+                                style="margin-top: 10px; padding: 8px 16px; font-size: 13px; font-weight: 500;">Save
+                                Instructions</button>
                         </div>
 
                         <!-- API Keys & Cloud LLMs Tab Content (Redesigned 3 Inputs) -->
                         <div id="tab-api-keys" class="tab-pane">
-                            <div style="background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.2); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
+                            <div
+                                style="background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.2); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
                                 <div style="font-size:12.5px; color:var(--text-secondary); line-height:1.5;">
-                                    <strong style="color:var(--accent-purple,#8b5cf6);">💡 API Connections & Model Setup:</strong><br>
-                                    Select an LLM Provider, choose its permitted model, and enter your API Key. Direct links to fetch official keys are attached for each provider.
+                                    <strong style="color:var(--accent-purple,#8b5cf6);">💡 API Connections & Model
+                                        Setup:</strong><br>
+                                    Select an LLM Provider, choose its permitted model, and enter your API Key. Direct
+                                    links to fetch official keys are attached for each provider.
                                 </div>
                             </div>
 
                             <!-- 1. LLM Model Provider Dropdown -->
                             <div class="parameter-control" style="margin-bottom: 14px;">
-                                <label for="api-provider-select" style="display: block; font-size: 12.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">
+                                <label for="api-provider-select"
+                                    style="display: block; font-size: 12.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">
                                     1. Select LLM Model Provider
                                 </label>
-                                <select id="api-provider-select" style="width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 9px 12px; color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
+                                <select id="api-provider-select"
+                                    style="width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 9px 12px; color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
                                     <option value="openai">OpenAI</option>
                                     <option value="gemini">Google Gemini</option>
                                     <option value="claude">Anthropic Claude</option>
@@ -667,92 +725,145 @@
 
                             <!-- 2. Sub Models Dropdown -->
                             <div class="parameter-control" style="margin-bottom: 14px;">
-                                <label for="api-submodel-select" style="display: block; font-size: 12.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">
+                                <label for="api-submodel-select"
+                                    style="display: block; font-size: 12.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">
                                     2. Permitted Models (Latest 3)
                                 </label>
-                                <select id="api-submodel-select" style="width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 9px 12px; color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
+                                <select id="api-submodel-select"
+                                    style="width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 9px 12px; color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
                                     <!-- Populated dynamically based on selected provider -->
                                 </select>
                             </div>
 
                             <!-- 3. API Key Input + Direct Web Link -->
                             <div class="parameter-control" style="margin-bottom: 18px;">
-                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                                    <label for="api-key-input" style="font-size: 12.5px; font-weight: 600; color: var(--text-secondary);">
+                                <div
+                                    style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                                    <label for="api-key-input"
+                                        style="font-size: 12.5px; font-weight: 600; color: var(--text-secondary);">
                                         3. API Key Input
                                     </label>
-                                    <a id="api-get-key-link" href="https://platform.openai.com/api-keys" target="_blank" rel="noopener"
-                                       style="font-size: 11.5px; font-weight: 500; color: var(--accent-purple,#8b5cf6); text-decoration: none; display: inline-flex; align-items: center; gap: 4px;"
-                                       title="Get official API key from provider">
+                                    <a id="api-get-key-link" href="https://platform.openai.com/api-keys" target="_blank"
+                                        rel="noopener"
+                                        style="font-size: 11.5px; font-weight: 500; color: var(--accent-purple,#8b5cf6); text-decoration: none; display: inline-flex; align-items: center; gap: 4px;"
+                                        title="Get official API key from provider">
                                         <span id="api-link-label">Get OpenAI Key</span> ↗
                                     </a>
                                 </div>
-                                <input type="password" id="api-key-input" placeholder="sk-proj-..." style="width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 9px 12px; color: var(--text-primary); font-size: 13px; outline: none;">
-                                <div id="api-key-status-badge" style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">
+                                <input type="password" id="api-key-input" placeholder="sk-proj-..."
+                                    style="width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 9px 12px; color: var(--text-primary); font-size: 13px; outline: none;">
+                                <div id="api-key-status-badge"
+                                    style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">
                                     Status: Not configured
                                 </div>
                             </div>
 
-                            <button id="save-api-keys-btn" class="btn btn-primary" style="padding: 9px 18px; font-size: 13px; font-weight: 500; width: 100%;">
+                            <button id="save-api-keys-btn" class="btn btn-primary"
+                                style="padding: 9px 18px; font-size: 13px; font-weight: 500; width: 100%;">
                                 <i data-lucide="check"></i> Save API Connection & Set Default
                             </button>
                         </div>
 
                         <!-- Embedding Models Tab Content -->
                         <div id="tab-embedding-models" class="tab-pane">
-                            <div style="background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.2); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
+                            <div
+                                style="background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.2); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
                                 <div style="font-size:12.5px; color:var(--text-secondary); line-height:1.5;">
-                                    <strong style="color:var(--accent-purple,#8b5cf6);">🧠 Vector Embedding Models Configuration:</strong><br>
-                                    Select from top pre-configured OpenSource (local) and Paid (Cloud API) embedding models, or add a custom embedding model.
+                                    <strong style="color:var(--accent-purple,#8b5cf6);">🧠 Vector Embedding Models
+                                        Configuration:</strong><br>
+                                    Select from top pre-configured OpenSource (local) and Paid (Cloud API) embedding
+                                    models, or add a custom embedding model.
                                 </div>
                             </div>
 
                             <!-- Active Embedding Model Selection -->
                             <div class="parameter-control" style="margin-bottom: 16px;">
-                                <label for="embedding-model-select" style="display: block; font-size: 12.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">
+                                <label for="embedding-model-select"
+                                    style="display: block; font-size: 12.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">
                                     Select Active Embedding Model
                                 </label>
-                                <select id="embedding-model-select" style="width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 9px 12px; color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
-                                    <option value="nomic-embed-text">nomic-embed-text (OpenSource - Ollama/Local)</option>
-                                    <option value="BAAI/bge-small-en-v1.5">BAAI/bge-small-en-v1.5 (OpenSource - HuggingFace)</option>
-                                    <option value="text-embedding-3-small">text-embedding-3-small (Paid - OpenAI API)</option>
-                                    <option value="text-embedding-004">text-embedding-004 (Paid - Google Gemini API)</option>
+                                <select id="embedding-model-select"
+                                    style="width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 9px 12px; color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
+                                    <option value="nomic-embed-text">nomic-embed-text (OpenSource - Ollama/Local)
+                                    </option>
+                                    <option value="BAAI/bge-small-en-v1.5">BAAI/bge-small-en-v1.5 (OpenSource -
+                                        HuggingFace)</option>
+                                    <option value="text-embedding-3-small">text-embedding-3-small (Paid - OpenAI API)
+                                    </option>
+                                    <option value="text-embedding-004">text-embedding-004 (Paid - Google Gemini API)
+                                    </option>
                                 </select>
                             </div>
 
-                            <!-- Active Model Details Info Card -->
-                            <div id="embedding-model-details" style="background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px; color: var(--text-secondary);">
-                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                                    <strong id="embed-detail-title" style="color: var(--text-primary);">nomic-embed-text</strong>
-                                    <span id="embed-detail-badge" class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 8px; border-radius: 12px; font-size: 10.5px; font-weight: 600;">OpenSource (Local)</span>
+                            <div id="active-embedding-key-wrapper" class="parameter-control hidden"
+                                style="margin-bottom: 16px;">
+                                <label for="active-embedding-api-key"
+                                    style="display: block; font-size: 12.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px;">
+                                    API Key
+                                </label>
+
+                                <input type="password" id="active-embedding-api-key" autocomplete="off"
+                                    placeholder="Enter API key for the selected embedding provider..."
+                                    style="width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 9px 12px; color: var(--text-primary); font-size: 13px; outline: none;">
+
+                                <div style="margin-top: 5px; font-size: 10.5px; color: var(--text-muted);">
+                                    Required only for hosted embedding models.
                                 </div>
-                                <p id="embed-detail-desc" style="margin: 0 0 6px 0; font-size: 11.5px; color: var(--text-muted);">High accuracy 768-dimensional local vector embedding model.</p>
-                                <div id="embed-detail-provider" style="font-size: 11px; color: var(--text-secondary);">Provider: Ollama / Local Server (http://localhost:11434)</div>
+                            </div>
+
+                            <!-- Active Model Details Info Card -->
+                            <div id="embedding-model-details"
+                                style="background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px; color: var(--text-secondary);">
+                                <div
+                                    style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                                    <strong id="embed-detail-title"
+                                        style="color: var(--text-primary);">nomic-embed-text</strong>
+                                    <span id="embed-detail-badge" class="badge"
+                                        style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 8px; border-radius: 12px; font-size: 10.5px; font-weight: 600;">OpenSource
+                                        (Local)</span>
+                                </div>
+                                <p id="embed-detail-desc"
+                                    style="margin: 0 0 6px 0; font-size: 11.5px; color: var(--text-muted);">High
+                                    accuracy 768-dimensional local vector embedding model.</p>
+                                <div id="embed-detail-provider" style="font-size: 11px; color: var(--text-secondary);">
+                                    Provider: Ollama / Local Server (http://localhost:11434)</div>
                             </div>
 
                             <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-                                <button id="save-embedding-model-btn" class="embed-btn-activate" style="flex: 1; padding: 7px 12px; font-size: 12px; font-weight: 500; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s ease;">
-                                    <i data-lucide="check" style="width: 14px; height: 14px;"></i> Activate Selected Model
+                                <button id="save-embedding-model-btn" class="embed-btn-activate"
+                                    style="flex: 1; padding: 7px 12px; font-size: 12px; font-weight: 500; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s ease;">
+                                    <i data-lucide="check" style="width: 14px; height: 14px;"></i> Activate Selected
+                                    Model
                                 </button>
-                                <button id="toggle-add-embedding-btn" class="embed-btn-add" style="padding: 7px 12px; font-size: 12px; font-weight: 500; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s ease;">
+                                <button id="toggle-add-embedding-btn" class="embed-btn-add"
+                                    style="padding: 7px 12px; font-size: 12px; font-weight: 500; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s ease;">
                                     <i data-lucide="plus" style="width: 14px; height: 14px;"></i> Add New Model
                                 </button>
                             </div>
 
                             <!-- Add New Custom Embedding Model Form (Collapsible) -->
-                            <div id="add-embedding-form-container" class="hidden" style="background: rgba(0,0,0,0.25); border: 1px dashed var(--border-color); border-radius: 8px; padding: 14px; margin-top: 10px;">
-                                <h4 style="margin: 0 0 10px 0; font-size: 13px; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
-                                    <i data-lucide="plus-circle" style="width: 14px; height: 14px; color: var(--accent-purple,#8b5cf6);"></i> Add Custom Embedding Model
+                            <div id="add-embedding-form-container" class="hidden"
+                                style="background: rgba(0,0,0,0.25); border: 1px dashed var(--border-color); border-radius: 8px; padding: 14px; margin-top: 10px;">
+                                <h4
+                                    style="margin: 0 0 10px 0; font-size: 13px; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
+                                    <i data-lucide="plus-circle"
+                                        style="width: 14px; height: 14px; color: var(--accent-purple,#8b5cf6);"></i> Add
+                                    Custom Embedding Model
                                 </h4>
 
                                 <!-- Connection Type Selection -->
                                 <div class="parameter-control" style="margin-bottom: 12px;">
-                                    <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px;">Connection Type</label>
+                                    <label
+                                        style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px;">Connection
+                                        Type</label>
                                     <div style="display: flex; gap: 16px;">
-                                        <label style="font-size: 12px; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                                            <input type="radio" name="custom-embed-type" value="opensource" checked> OpenSource (Install / Local)
+                                        <label
+                                            style="font-size: 12px; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                            <input type="radio" name="custom-embed-type" value="opensource" checked>
+                                            OpenSource (Install / Local)
                                         </label>
-                                        <label style="font-size: 12px; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                        <label
+                                            style="font-size: 12px; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; gap: 6px;">
                                             <input type="radio" name="custom-embed-type" value="paid"> Paid (Cloud API)
                                         </label>
                                     </div>
@@ -760,15 +871,23 @@
 
                                 <!-- Model Name / HuggingFace ID / Tag -->
                                 <div class="parameter-control" style="margin-bottom: 12px;">
-                                    <label for="custom-embed-name" style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px;">Model ID / Name</label>
-                                    <input type="text" id="custom-embed-name" placeholder="e.g. BAAI/bge-large-en-v1.5 or text-embedding-3-large" style="width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; padding: 7px 10px; color: var(--text-primary); font-size: 12.5px; outline: none;">
+                                    <label for="custom-embed-name"
+                                        style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px;">Model
+                                        ID / Name</label>
+                                    <input type="text" id="custom-embed-name"
+                                        placeholder="e.g. BAAI/bge-large-en-v1.5 or text-embedding-3-large"
+                                        style="width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; padding: 7px 10px; color: var(--text-primary); font-size: 12.5px; outline: none;">
                                 </div>
 
                                 <!-- Provider / Endpoint -->
                                 <div class="parameter-control" style="margin-bottom: 12px;">
-                                    <label for="custom-embed-provider" style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px;">Provider / Platform</label>
-                                    <select id="custom-embed-provider" style="width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; padding: 7px 10px; color: var(--text-primary); font-size: 12.5px; outline: none;">
-                                        <option value="HuggingFace Local">HuggingFace Local (SentenceTransformers)</option>
+                                    <label for="custom-embed-provider"
+                                        style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px;">Provider
+                                        / Platform</label>
+                                    <select id="custom-embed-provider"
+                                        style="width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; padding: 7px 10px; color: var(--text-primary); font-size: 12.5px; outline: none;">
+                                        <option value="HuggingFace Local">HuggingFace Local (SentenceTransformers)
+                                        </option>
                                         <option value="Ollama Local">Ollama Local (ollama run)</option>
                                         <option value="OpenAI API">OpenAI API (Cloud)</option>
                                         <option value="Google Gemini API">Google Gemini API (Cloud)</option>
@@ -778,13 +897,20 @@
                                 </div>
 
                                 <!-- API Key Field (Conditional) -->
-                                <div id="custom-embed-key-wrapper" class="parameter-control hidden" style="margin-bottom: 14px;">
-                                    <label for="custom-embed-api-key" style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px;">API Key (if required)</label>
-                                    <input type="password" id="custom-embed-api-key" placeholder="Enter API key for this embedding provider..." style="width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; padding: 7px 10px; color: var(--text-primary); font-size: 12.5px; outline: none;">
+                                <div id="custom-embed-key-wrapper" class="parameter-control hidden"
+                                    style="margin-bottom: 14px;">
+                                    <label for="custom-embed-api-key"
+                                        style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px;">API
+                                        Key (if required)</label>
+                                    <input type="password" id="custom-embed-api-key"
+                                        placeholder="Enter API key for this embedding provider..."
+                                        style="width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; padding: 7px 10px; color: var(--text-primary); font-size: 12.5px; outline: none;">
                                 </div>
 
-                                <button id="submit-custom-embedding-btn" class="embed-btn-activate" style="padding: 7px 14px; font-size: 12px; width: 100%; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s ease;">
-                                    <i data-lucide="check" style="width: 14px; height: 14px;"></i> Register & Connect Embedding Model
+                                <button id="submit-custom-embedding-btn" class="embed-btn-activate"
+                                    style="padding: 7px 14px; font-size: 12px; width: 100%; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s ease;">
+                                    <i data-lucide="check" style="width: 14px; height: 14px;"></i> Register & Connect
+                                    Embedding Model
                                 </button>
                             </div>
                         </div>

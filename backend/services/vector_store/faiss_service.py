@@ -8,7 +8,7 @@ class FaissService(BaseVectorStore):
     Used as a fast in-memory vector index.
     """
 
-    VECTOR_SIZE = 768
+    VECTOR_SIZE = 1536
 
     def __init__(self):
         self._index = None

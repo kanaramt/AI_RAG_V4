@@ -23,3 +23,15 @@ class RetrievalRequest(BaseModel):
         default_factory=dict,
         description="Optional metadata filters."
     )
+
+    embedding_model: str | None = Field(
+        default=None,
+        description="Embedding model to use for this retrieval request."
+    )
+
+    embedding_api_key: str | None = Field(
+        default=None,
+        repr=False,
+        exclude=True,
+        description="Request-scoped embedding API key. Never persisted or serialized."
+    )

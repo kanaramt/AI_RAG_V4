@@ -37,7 +37,9 @@ class Settings(BaseSettings):
     # Local Models
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     CHAT_MODEL: str = "llama3:latest"
-    EMBEDDING_MODEL: str = "nomic-embed-text"
+    #EMBEDDING_MODEL: str = "nomic-embed-text"
+    # Legacy local reference: nomic-embed-text
+    EMBEDDING_MODEL: str = "text-embedding-3-small"
 
     # Chunking
     CHUNK_SIZE: int = 2000

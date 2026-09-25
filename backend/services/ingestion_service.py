@@ -51,7 +51,13 @@ class IngestionService:
     """
 
     @classmethod
-    async def ingest_upload(cls, file, memory) -> Dict[str, Any]:
+    async def ingest_upload(
+        cls,
+        file,
+        memory,
+        embedding_model: str | None = None,
+        embedding_api_key: str | None = None,
+    ) -> Dict[str, Any]:
         """
         Ingest an uploaded file, write to vector database, register in SQLite,
         and synchronize the Knowledge Catalog.
@@ -72,7 +78,16 @@ class IngestionService:
 
         chunks = DocumentChunker.chunk_text(text)
 
-        embedding_service = EmbeddingService()
+        _active_embed_model = (
+            embedding_model
+            or os.getenv("ACTIVE_EMBEDDING_MODEL")
+            or settings.EMBEDDING_MODEL
+        )
+
+        embedding_service = EmbeddingService(
+            model_name=_active_embed_model,
+            api_key=embedding_api_key,
+        )
         embeddings = embedding_service.generate_embeddings(chunks)
 
         vector_store = VectorStoreFactory.create()
@@ -129,7 +144,7 @@ class IngestionService:
                     content=text,
                     created_at=ist_now(),
                 )
-            )   
+            )
         finally:
             db.close()
 
@@ -141,7 +156,7 @@ class IngestionService:
             source_name=file.filename,
             source_path=str(file_path),
             chunk_count=len(chunks),
-            embedding_model=settings.EMBEDDING_MODEL,
+            embedding_model=_active_embed_model,
             vector_store=settings.VECTOR_STORE,
         )
 
@@ -157,7 +172,13 @@ class IngestionService:
             "message": f"Successfully indexed {len(chunks)} chunks.",
         }
     @classmethod
-    async def ingest_local_file(cls, file_path: Path, memory) -> Dict[str, Any]:
+    async def ingest_local_file(
+        cls,
+        file_path: Path,
+        memory,
+        embedding_model: str | None = None,
+        embedding_api_key: str | None = None,
+    ) -> Dict[str, Any]:
         """
         Ingest a file that already exists in the local knowledge base.
         Supports: txt, pdf, csv, docx, xlsx, pptx, png, jpg, jpeg, bmp, tiff, webp
@@ -216,7 +237,16 @@ class IngestionService:
         if not chunks:
             return None
 
-        embedding_service = EmbeddingService()
+        _active_embed_model = (
+            embedding_model
+            or os.getenv("ACTIVE_EMBEDDING_MODEL")
+            or settings.EMBEDDING_MODEL
+        )
+
+        embedding_service = EmbeddingService(
+            model_name=_active_embed_model,
+            api_key=embedding_api_key,
+        )
         embeddings = embedding_service.generate_embeddings(chunks)
 
         vector_store = VectorStoreFactory.create()
@@ -345,7 +375,7 @@ class IngestionService:
             source_name=file_path.name,
             source_path=str(file_path),
             chunk_count=len(chunks),
-            embedding_model=settings.EMBEDDING_MODEL,
+            embedding_model=_active_embed_model,
             vector_store=settings.VECTOR_STORE,
         )
 
@@ -363,11 +393,17 @@ class IngestionService:
 
 
     @classmethod
-    async def ingest_url(cls, url: str, memory) -> Dict[str, Any]:
+    async def ingest_url(
+        cls,
+        url: str,
+        memory,
+        embedding_model: str | None = None,
+        embedding_api_key: str | None = None,
+    ) -> Dict[str, Any]:
         """
         Validate URL, fetch webpage, clean HTML (strip nav, menus, footers, ads, scripts),
         chunk, embed, index to vector database, and register metadata in SQLite.
-        
+
         Returns:
             dict containing: status, doc_id, url, page_title, pages_loaded, chunks_created, processing_time_ms, vector_db_status
         """
@@ -390,7 +426,16 @@ class IngestionService:
             raise RuntimeError("No readable content chunks extracted from webpage.")
 
         # 3. Generate Embeddings using EmbeddingService
-        embedding_service = EmbeddingService()
+        _active_embed_model = (
+            embedding_model
+            or os.getenv("ACTIVE_EMBEDDING_MODEL")
+            or settings.EMBEDDING_MODEL
+        )
+
+        embedding_service = EmbeddingService(
+            model_name=_active_embed_model,
+            api_key=embedding_api_key,
+        )
         embeddings = await asyncio.to_thread(embedding_service.generate_embeddings, doc_chunks)
 
         # 4. Store Embeddings in Vector Store (Qdrant & FAISS)
@@ -457,20 +502,35 @@ class IngestionService:
         }
 
     @classmethod
-    async def ingest_pasted_content(cls, title: str, content: str, memory) -> bool:
+    async def ingest_pasted_content(
+        cls,
+        title: str,
+        content: str,
+        memory,
+        embedding_model: str | None = None,
+        embedding_api_key: str | None = None,
+    ) -> bool:
         """
         Index clipboard pasted text.
         """
         try:
             import asyncio
             doc_chunks = DocumentChunker.chunk_text(content)
-            embedding_service = EmbeddingService()
+            _active_embed_model = (
+                embedding_model
+                or os.getenv("ACTIVE_EMBEDDING_MODEL")
+                or settings.EMBEDDING_MODEL
+            )
+            embedding_service = EmbeddingService(
+                model_name=_active_embed_model,
+                api_key=embedding_api_key,
+            )
             embeddings = await asyncio.to_thread(embedding_service.generate_embeddings, doc_chunks)
-            
+
             vector_store = VectorStoreFactory.create()
             doc_id = str(uuid4())
             ids = [str(uuid4()) for i in range(len(doc_chunks))]
-            
+
             metadatas = [
                 {
                     "source": title,
@@ -480,10 +540,10 @@ class IngestionService:
                 for i in range(len(doc_chunks))
             ]
             vector_store.add_documents(ids, doc_chunks, embeddings, metadatas)
-            
+
             size_str = cls._format_size(len(content))
             memory.add_document(doc_id, title, size_str, "text/plain", f"paste_{doc_id}")
-            
+
             # Register document metadata in SQLite/SQLAlchemy
             db = SessionLocal()
             try:
@@ -507,7 +567,7 @@ class IngestionService:
             # Rebuild KB Metadata Summary
             from services.kb_metadata_service import KBMetadataService
             asyncio.create_task(KBMetadataService.rebuild_metadata())
-            
+
             return True
         except Exception as e:
             print(f"Error indexing pasted content: {e}")
@@ -523,4 +583,3 @@ class IngestionService:
         i = int(math.floor(math.log(size_in_bytes) / math.log(k))) if size_in_bytes > 0 else 0
         val = size_in_bytes / (k ** i)
         return f"{val:.1f} {sizes[i]}"
-
