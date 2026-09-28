@@ -289,18 +289,33 @@ export function renderAssistantPage(state, onNavigate) {
     // 3. VectorDB Refresh Button
     if (refreshBtn) {
       refreshBtn.addEventListener('click', async () => {
-        refreshBtn.classList.add('spinning');
-        showToast('Refreshing Vector DB index & document catalog...', 'info');
-        await new Promise(r => setTimeout(r, 800));
-        refreshBtn.classList.remove('spinning');
-        const docBadge = document.getElementById('db-document-count');
-        const res = await fetch('/api/documents/count');
-        const data = await res.json();
+        try {
+          refreshBtn.classList.add('spinning');
 
-        if (docBadge) {
-          docBadge.textContent = `${data.document_count} Documents Indexed`;
+          showToast('Refreshing Vector DB index & document catalog...', 'info');
+
+          await fetch('/api/documents/sync', {
+            method: 'POST'
+          });
+
+          const res = await fetch('/api/documents/count');
+          const data = await res.json();
+
+          const docBadge = document.getElementById('db-document-count');
+
+          if (docBadge) {
+            docBadge.textContent =
+              `${data.document_count} Documents Indexed`;
+          }
+
+          showToast('Vector DB refreshed successfully!', 'success');
+
+        } catch (err) {
+          console.error(err);
+          showToast('Vector DB refresh failed.', 'error');
+        } finally {
+          refreshBtn.classList.remove('spinning');
         }
-        showToast('Vector DB index updated successfully!', 'success');
       });
     }
 
