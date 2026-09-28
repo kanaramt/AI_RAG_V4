@@ -294,7 +294,12 @@ export function renderAssistantPage(state, onNavigate) {
         await new Promise(r => setTimeout(r, 800));
         refreshBtn.classList.remove('spinning');
         const docBadge = document.getElementById('db-document-count');
-        if (docBadge) docBadge.textContent = '4 Documents Indexed';
+        const res = await fetch('/api/documents/count');
+        const data = await res.json();
+
+        if (docBadge) {
+          docBadge.textContent = `${data.document_count} Documents Indexed`;
+        }
         showToast('Vector DB index updated successfully!', 'success');
       });
     }

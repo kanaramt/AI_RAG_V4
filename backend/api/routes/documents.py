@@ -9,8 +9,13 @@ from dependencies import get_memory
 from database.session import get_db
 from settings import settings
 from engines.ingestion.ingestion_engine import IngestionEngine
+from database.session import SessionLocal
+from services.document_management.document_sql_repository import DocumentSQLRepository
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/documents",
+    tags=["documents"]
+)
 
 # Schemas
 class PasteSchema(BaseModel):
@@ -296,6 +301,22 @@ async def sync_knowledge_base(memory = Depends(get_memory)):
         "errors": sync_result["errors"],
         "message": f"Synced {sync_result['synced_count']} new file(s) from backend/data/ knowledge base."
     }
+
+
+@router.get("/count")
+async def get_document_count():
+    db = SessionLocal()
+
+    try:
+        repo = DocumentSQLRepository(db)
+        docs = repo.get_all()
+
+        return {
+            "document_count": len(docs)
+        }
+
+    finally:
+        db.close()
 
 
 
