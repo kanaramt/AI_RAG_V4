@@ -33,11 +33,27 @@ class UrlSchema(BaseModel):
 # --- Documents Endpoints ---
 
 @router.get("")
-async def list_documents(memory = Depends(get_memory)):
-    """
-    List all indexed documents registered in SQLite.
-    """
-    return memory.list_documents()
+async def list_documents():
+
+    db = SessionLocal()
+
+    try:
+        repo = DocumentSQLRepository(db)
+        docs = repo.get_all()
+
+        return [
+            {
+                "id": doc.document_id,
+                "name": doc.title,
+                "size": "-",
+                "type": doc.source_type,
+                "path": doc.source_name
+            }
+            for doc in docs
+        ]
+
+    finally:
+        db.close()
 
 @router.post("/upload")
 async def upload_documents(
