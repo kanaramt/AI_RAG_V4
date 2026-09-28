@@ -11,7 +11,9 @@ from services.embeddings.huggingface_embedding import HuggingFaceEmbedding
 from services.embeddings.openai_embedding import OpenAIEmbedding
 from services.embeddings.gemini_embedding import GeminiEmbedding
 from services.embeddings.huggingface_hosted_embedding import HuggingFaceHostedEmbedding
-
+from services.embeddings.active_embedding_setting_repository import (
+    ActiveEmbeddingSettingRepository,
+)
 
 class EmbeddingService:
     """
@@ -28,6 +30,7 @@ class EmbeddingService:
     ):
         self.model = (
             model_name
+            or ActiveEmbeddingSettingRepository.get_active_model()
             or os.getenv("ACTIVE_EMBEDDING_MODEL")
             or settings.EMBEDDING_MODEL
             or DEFAULT_EMBEDDING_MODEL

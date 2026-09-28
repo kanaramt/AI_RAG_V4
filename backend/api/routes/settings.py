@@ -19,6 +19,11 @@ from services.embeddings.huggingface_validator import (
     validate_huggingface_embedding,
 )
 
+from services.embeddings.active_embedding_setting_repository import (
+    ActiveEmbeddingSettingRepository,
+)
+
+
 
 router = APIRouter()
 
@@ -633,9 +638,11 @@ class AddEmbeddingModel(BaseModel):
 @router.get("/embeddings")
 async def get_embedding_models():
 
-    active = os.getenv(
-        "ACTIVE_EMBEDDING_MODEL",
-        DEFAULT_EMBEDDING_MODEL,
+    active = (
+        ActiveEmbeddingSettingRepository.get_active_model()
+        or os.getenv("ACTIVE_EMBEDDING_MODEL")
+        or settings.EMBEDDING_MODEL
+        or DEFAULT_EMBEDDING_MODEL
     )
 
     models = []
@@ -786,15 +793,11 @@ async def select_embedding_model(
                 ),
             )
 
+    ActiveEmbeddingSettingRepository.save_active_model(model_id)
+
     os.environ[
         "ACTIVE_EMBEDDING_MODEL"
     ] = model_id
-
-    _update_env_file(
-        {
-            "ACTIVE_EMBEDDING_MODEL": model_id
-        }
-    )
 
     return JSONResponse(
         content={
@@ -890,7 +893,9 @@ async def add_embedding_model(
 
         register_embedding_model(model_id, _hf_config)
         persist_to_db(model_id, _hf_config)
-
+        ActiveEmbeddingSettingRepository.save_active_model(
+            model_id
+        )
         os.environ[
             "ACTIVE_EMBEDDING_MODEL"
         ] = model_id
@@ -942,6 +947,9 @@ async def add_embedding_model(
                     f"embedding model '{model_id}'."
                 ),
             )
+        ActiveEmbeddingSettingRepository.save_active_model(
+            model_id
+        )
 
         os.environ[
             "ACTIVE_EMBEDDING_MODEL"

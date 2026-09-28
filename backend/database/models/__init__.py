@@ -18,6 +18,7 @@ from .conversation_model import ConversationModel
 from .message_model import MessageModel
 from .chat_history_record_model import ChatHistoryRecordModel
 from .embedding_config_model import EmbeddingConfigModel
+from .active_embedding_setting import ActiveEmbeddingSettingModel
 
 __all__ = [
     "KnowledgeAssetModel",
@@ -33,4 +34,5 @@ __all__ = [
     "MessageModel",
     "ChatHistoryRecordModel",
     "EmbeddingConfigModel",
+    "ActiveEmbeddingSettingModel",
 ]

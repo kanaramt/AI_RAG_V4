@@ -13,6 +13,9 @@ from services.evaluation_service import calculate_rag_metrics
 from services.ingestion_service import IngestionService
 from engines.generation.generation_engine import GenerationEngine
 from settings import settings
+from services.embeddings.active_embedding_setting_repository import (
+    ActiveEmbeddingSettingRepository,
+)
 
 router = APIRouter()
 
@@ -631,6 +634,7 @@ async def post_message(
             _active_emb = (
                 data.settings.get("embedding_model")
                 or data.settings.get("embeddingModel")
+                or ActiveEmbeddingSettingRepository.get_active_model()
                 or _os.getenv("ACTIVE_EMBEDDING_MODEL")
             )
 
@@ -985,6 +989,7 @@ async def post_message(
 
         _active_emb = (
             embedding_model
+            or ActiveEmbeddingSettingRepository.get_active_model()
             or _os.getenv("ACTIVE_EMBEDDING_MODEL")
         )
 

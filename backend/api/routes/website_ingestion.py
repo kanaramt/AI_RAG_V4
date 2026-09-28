@@ -23,6 +23,8 @@ class AddWebsiteSchema(BaseModel):
     url: str
     name: str
     is_default: Optional[bool] = False
+    embedding_model: Optional[str] = None
+    embedding_api_key: Optional[str] = None
 
 class UpdateConfigSchema(BaseModel):
     allow_user_ingestion: bool
@@ -63,7 +65,7 @@ async def add_website(payload: AddWebsiteSchema, db: Session = Depends(get_db)):
     """
     url_clean = payload.url.strip()
     name_clean = payload.name.strip()
-    
+
     if not url_clean or not name_clean:
         raise HTTPException(status_code=400, detail="URL and friendly name are required.")
 
@@ -95,7 +97,13 @@ async def add_website(payload: AddWebsiteSchema, db: Session = Depends(get_db)):
     db.commit()
 
     # Trigger async crawling
-    WebsiteCrawlerService.start_crawl(website_id, max_pages=50, max_depth=3)
+    WebsiteCrawlerService.start_crawl(
+        website_id,
+        max_pages=50,
+        max_depth=3,
+        embedding_model=payload.embedding_model,
+        embedding_api_key=payload.embedding_api_key,
+    )
 
     return {"status": "success", "message": "Crawler registered and started.", "id": website_id}
 
@@ -113,7 +121,13 @@ async def recrawl_website(website_id: str, db: Session = Depends(get_db)):
     db.commit()
 
     # Start crawl in background
-    WebsiteCrawlerService.start_crawl(website_id, max_pages=50, max_depth=3)
+    WebsiteCrawlerService.start_crawl(
+        website_id,
+        max_pages=50,
+        max_depth=3,
+        embedding_model=None,
+        embedding_api_key=None,
+    )
 
     return {"status": "success", "message": "Recrawling triggered."}
 
@@ -131,7 +145,9 @@ async def reindex_website(website_id: str, db: Session = Depends(get_db)):
     db.commit()
 
     # Start reindexing in background
-    WebsiteCrawlerService.start_reindex(website_id)
+    WebsiteCrawlerService.start_reindex(
+        website_id,
+    )
 
     return {"status": "success", "message": "Re-indexing triggered."}
 

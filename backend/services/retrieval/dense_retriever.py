@@ -8,7 +8,9 @@ from services.embedding_service import EmbeddingService
 from services.retrieval.base import BaseRetriever
 from services.vector_store.factory import VectorStoreFactory
 from schemas.retrieval.retrieved_document import RetrievedDocument
-
+from services.embeddings.active_embedding_setting_repository import (
+    ActiveEmbeddingSettingRepository,
+)
 
 class DenseRetriever(BaseRetriever):
     """
@@ -31,6 +33,7 @@ class DenseRetriever(BaseRetriever):
         # Use explicitly provided model, fall back to active model from env
         resolved_model = (
             model_name
+            or ActiveEmbeddingSettingRepository.get_active_model()
             or os.getenv("ACTIVE_EMBEDDING_MODEL")
         )
 

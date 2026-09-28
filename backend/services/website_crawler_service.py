@@ -20,7 +20,9 @@ from services.vector_store.factory import VectorStoreFactory
 from catalog.schemas.knowledge_asset import SourceType, AssetStatus
 from catalog.repositories.asset_sql_repository import AssetSQLRepository
 from catalog.services.asset_service import AssetService
-
+from services.embeddings.active_embedding_setting_repository import (
+    ActiveEmbeddingSettingRepository,
+)
 
 class WebsiteCrawlerService:
     """
@@ -40,20 +42,39 @@ class WebsiteCrawlerService:
         return hashlib.md5(url.lower().strip().encode("utf-8")).hexdigest()
 
     @classmethod
-    def start_crawl(cls, website_id: str, max_pages: int = 50, max_depth: int = 3):
+    def start_crawl(
+        cls,
+        website_id: str,
+        max_pages: int = 50,
+        max_depth: int = 3,
+        embedding_model: str | None = None,
+        embedding_api_key: str | None = None,
+    ):
         """
         Runs the crawling and indexing in a background thread to prevent blocking.
         """
         thread = threading.Thread(
-            target=cls._crawl_and_index_sync,
-            args=(website_id,),
-            kwargs={"max_pages": max_pages, "max_depth": max_depth},
-            daemon=True
-        )
+    target=cls._crawl_and_index_sync,
+    args=(website_id,),
+    kwargs={
+        "max_pages": max_pages,
+        "max_depth": max_depth,
+        "embedding_model": embedding_model,
+        "embedding_api_key": embedding_api_key,
+    },
+    daemon=True
+)
         thread.start()
 
     @classmethod
-    def _crawl_and_index_sync(cls, website_id: str, max_pages: int = 50, max_depth: int = 3):
+    def _crawl_and_index_sync(
+    cls,
+    website_id: str,
+    max_pages: int = 50,
+    max_depth: int = 3,
+    embedding_model: str | None = None,
+    embedding_api_key: str | None = None,
+):
         """
         Synchronous worker executing the crawling, chunking, embedding, and indexing.
         """
@@ -176,7 +197,12 @@ class WebsiteCrawlerService:
         failed_count = 0
         crawled_count = 0
 
-        embedding_service = EmbeddingService()
+        _active_embed_model = (
+            ActiveEmbeddingSettingRepository.get_active_model()
+            or os.getenv("ACTIVE_EMBEDDING_MODEL")
+            or settings.EMBEDDING_MODEL
+        )
+        embedding_service = EmbeddingService(model_name=_active_embed_model)
         vector_store = VectorStoreFactory.create()
 
         for idx, page_url in enumerate(discovered_urls):
@@ -358,7 +384,7 @@ class WebsiteCrawlerService:
 
             asset.document_id = website_id
             asset.chunk_count = total_chunks
-            asset.embedding_model = settings.EMBEDDING_MODEL
+            asset.embedding_model = _active_embed_model
             asset.vector_store = settings.VECTOR_STORE
             asset.status = AssetStatus.ACTIVE
             asset_service.update_asset(asset)
@@ -508,19 +534,33 @@ class WebsiteCrawlerService:
         return title, sections, breadcrumb, headings_structure
 
     @classmethod
-    def start_reindex(cls, website_id: str):
+    def start_reindex(
+        cls,
+        website_id: str,
+        embedding_model: str | None = None,
+        embedding_api_key: str | None = None,
+    ):
         """
         Runs the re-indexing of locally saved crawl data in a background thread to prevent blocking.
         """
         thread = threading.Thread(
             target=cls._reindex_sync,
             args=(website_id,),
-            daemon=True
+            kwargs={
+                "embedding_model": embedding_model,
+                "embedding_api_key": embedding_api_key,
+            },
+            daemon=True,
         )
         thread.start()
 
     @classmethod
-    def _reindex_sync(cls, website_id: str):
+    def _reindex_sync(
+        cls,
+        website_id: str,
+        embedding_model: str | None = None,
+        embedding_api_key: str | None = None,
+    ):
         """
         Synchronous worker executing re-indexing from local raw pages JSON files.
         """
@@ -571,7 +611,13 @@ class WebsiteCrawlerService:
         crawled_count = 0
         failed_count = 0
 
-        embedding_service = EmbeddingService()
+        _active_embed_model = (
+            embedding_model
+            or ActiveEmbeddingSettingRepository.get_active_model()
+            or os.getenv("ACTIVE_EMBEDDING_MODEL")
+            or settings.EMBEDDING_MODEL
+        )
+        embedding_service = EmbeddingService(model_name=_active_embed_model)
         vector_store = VectorStoreFactory.create()
 
         # Update discovered URLs count to files count
@@ -771,7 +817,7 @@ class WebsiteCrawlerService:
 
             asset.document_id = website_id
             asset.chunk_count = total_chunks
-            asset.embedding_model = settings.EMBEDDING_MODEL
+            asset.embedding_model = _active_embed_model
             asset.vector_store = settings.VECTOR_STORE
             asset.status = AssetStatus.ACTIVE
             asset_service.update_asset(asset)

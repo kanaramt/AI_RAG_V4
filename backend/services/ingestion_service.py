@@ -17,6 +17,9 @@ from catalog.services.catalog_sync_service import (
     CatalogSyncService,
 )
 from services.embedding_service import EmbeddingService
+from services.embeddings.active_embedding_setting_repository import (
+    ActiveEmbeddingSettingRepository,
+)
 from services.vector_store.factory import VectorStoreFactory
 from datetime import datetime
 
@@ -80,6 +83,7 @@ class IngestionService:
 
         _active_embed_model = (
             embedding_model
+            or ActiveEmbeddingSettingRepository.get_active_model()
             or os.getenv("ACTIVE_EMBEDDING_MODEL")
             or settings.EMBEDDING_MODEL
         )
@@ -239,6 +243,7 @@ class IngestionService:
 
         _active_embed_model = (
             embedding_model
+            or ActiveEmbeddingSettingRepository.get_active_model()
             or os.getenv("ACTIVE_EMBEDDING_MODEL")
             or settings.EMBEDDING_MODEL
         )
@@ -428,6 +433,7 @@ class IngestionService:
         # 3. Generate Embeddings using EmbeddingService
         _active_embed_model = (
             embedding_model
+            or ActiveEmbeddingSettingRepository.get_active_model()
             or os.getenv("ACTIVE_EMBEDDING_MODEL")
             or settings.EMBEDDING_MODEL
         )
@@ -518,6 +524,7 @@ class IngestionService:
             doc_chunks = DocumentChunker.chunk_text(content)
             _active_embed_model = (
                 embedding_model
+                or ActiveEmbeddingSettingRepository.get_active_model()
                 or os.getenv("ACTIVE_EMBEDDING_MODEL")
                 or settings.EMBEDDING_MODEL
             )
