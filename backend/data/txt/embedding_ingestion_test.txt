@@ -1,0 +1,3 @@
+Hypergene ingestion verification test.
+This document is being used to verify OpenAI embeddings, vector indexing, PostgreSQL persistence, and frontend synchronization.
+Test identifier: HG-INGEST-20260928-01
