@@ -654,8 +654,6 @@ async def post_message(
                 or data.settings.get("embeddingApiKey")
             )
 
-            import time
-
             emb_start = time.time()
 
             _emb_preview = EmbeddingService(
@@ -683,9 +681,6 @@ async def post_message(
             "detail": f"Running dense + sparse retrieval...",
             "status": "running"
         })
-        import time
-
-        retrieval_start = time.time()
 
         retrieval_start = time.time()
 
