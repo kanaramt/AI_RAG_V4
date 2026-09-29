@@ -143,21 +143,37 @@ async def lifespan(
         safe_print("\n[Lifespan] Running initial Knowledge Base discovery and auto-embedding (background)...")
         try:
             await KnowledgeBaseLoader.sync_knowledge_base(memory)
+            # Force garbage collection after KB sync to release unused memory
+            # Helps reduce memory pressure on low-memory Render instances
+            import gc #temporary change, can remove later. It clears memory
+            gc.collect()
             safe_print("[Lifespan] Initial Knowledge Base sync complete.")
         except Exception as e:
             safe_print(f"[Lifespan] Initial Knowledge Base sync error: {e}")
 
     # Launch background auto-sync watcher loop (includes initial sync above)
-    initial_sync_task = asyncio.create_task(_initial_kb_sync())
-    watcher_task = asyncio.create_task(auto_sync_watcher(memory, interval_seconds=10.0))
-
+    # initial_sync_task = asyncio.create_task(_initial_kb_sync()) #disabling currently, enable it later
+    #watcher_task = asyncio.create_task(auto_sync_watcher(memory, interval_seconds=10.0))
+    #Temporary disabling watcher since render goes out of memory. Enable it later as requirement.
+    watcher_task = None
+    
     # Server is now ready — yield immediately so port 8000 opens without delay
     yield
 
     # Shutdown hooks
-    initial_sync_task.cancel()
-    watcher_task.cancel()
+    #initial_sync_task.cancel() # disabling currently, enable it later
+    """watcher_task.cancel()
     try:
         await watcher_task
     except asyncio.CancelledError:
-        pass
+        pass""" ## temporary disabling, while enabling this disable the below same refernce code. 
+
+    if watcher_task:
+        watcher_task.cancel()
+
+        try:
+            await watcher_task
+        except asyncio.CancelledError:
+            pass
+
+

@@ -116,7 +116,7 @@ Provide a JSON object with exactly the following fields (nothing else, no format
         major_themes = top_cats if top_cats else ["Knowledge Repository", "Technical Documentation"]
 
         try:
-            model_name = os.getenv("DEFAULT_CLOUD_MODEL") or os.getenv("LLM_MODEL") or settings.DEFAULT_MODEL
+            model_name = os.getenv("DEFAULT_CLOUD_MODEL") or os.getenv("LLM_MODEL")
             print(f"[KBMetadataService] Attempting LLM analysis with model={model_name}")
 
             engine = GenerationEngine()
