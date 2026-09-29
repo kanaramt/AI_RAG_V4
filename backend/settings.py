@@ -24,10 +24,10 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./enterprise_rag.db"
 
     # LLM Configuration
-    DEFAULT_PROVIDER: str = "groq"
-    LLM_PROVIDER: str = "groq"
-    DEFAULT_MODEL: str = "openai/gpt-oss-20b"
-    LLM_MODEL: str = "openai/gpt-oss-20b"
+    DEFAULT_PROVIDER: str = "openai"
+    LLM_PROVIDER: str = "openai"
+    DEFAULT_MODEL: str = "gpt-4o"
+    LLM_MODEL: str = "gpt-4o"
 
     # Retrieval
     VECTOR_STORE: str = "hybrid"
