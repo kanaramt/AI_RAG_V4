@@ -179,9 +179,3 @@ class QdrantService(BaseVectorStore):
                 "error": str(e)
             }
 
-    service = QdrantService()
-    print(service.health_check())
-
-if __name__ == "__main__":
-    from settings import settings
-    QdrantService()
