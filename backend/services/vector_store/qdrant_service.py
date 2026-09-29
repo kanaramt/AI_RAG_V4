@@ -38,7 +38,7 @@ class QdrantService(BaseVectorStore):
     Enterprise implementation of the Vector Store using Qdrant.
     """
 
-    COLLECTION_NAME = "knowledge_base_openai"
+    COLLECTION_NAME = "knowledge_base"
     VECTOR_SIZE = 1536
 
     def __init__(self, collection_name: str = None):
@@ -161,6 +161,8 @@ class QdrantService(BaseVectorStore):
                 "error": str(e)
             }
 
+service = QdrantService()
+print(service.health_check())
 
 if __name__ == "__main__":
     from settings import settings
