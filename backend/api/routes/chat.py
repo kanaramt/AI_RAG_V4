@@ -554,7 +554,8 @@ async def post_message(
     should_retrieve = True
 
     rewritten_query = query
-    if history:
+    # TEMPORARILY DISABLE QUERY REWRITING
+    if False and history:
         try:
             history_str = ""
             for msg in history[-5:]:
