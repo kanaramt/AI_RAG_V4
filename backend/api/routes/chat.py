@@ -1,3 +1,4 @@
+from services.retrieval import retrieval_service
 import time
 import re
 import base64
@@ -653,10 +654,19 @@ async def post_message(
                 or data.settings.get("embeddingApiKey")
             )
 
+            import time
+
+            emb_start = time.time()
+
             _emb_preview = EmbeddingService(
                 model_name=_active_emb,
                 api_key=_embedding_key,
             ).generate_embedding(query)
+
+            print(
+                f"[PERF] Embedding Preview Time = "
+                f"{time.time() - emb_start:.2f} sec"
+            )
             emb_dims = len(_emb_preview) if _emb_preview else 0
             pipeline_trace.append({
                 "step": 3,
@@ -673,7 +683,18 @@ async def post_message(
             "detail": f"Running dense + sparse retrieval...",
             "status": "running"
         })
+        import time
+
+        retrieval_start = time.time()
+
+        retrieval_start = time.time()
+
         response_retrieval, context_str = await retrieval_service.retrieve(req)
+
+        print(
+            f"[PERF] Retrieval Time = "
+            f"{time.time() - retrieval_start:.2f} sec"
+        )
         retrieved_context_str = context_str
         num_docs = len(response_retrieval.documents)
         pipeline_trace[-1]["detail"] = f"Retrieved {num_docs} document chunk(s)"
