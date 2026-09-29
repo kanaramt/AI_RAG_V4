@@ -79,6 +79,11 @@ class DenseRetriever(BaseRetriever):
             filters=request.filters,
         )
 
+        print("=" * 80)
+        print("[DENSE RETRIEVER]")
+        print(f"Results Returned = {len(results)}")
+        print("=" * 80)
+
         documents = []
 
         for point in results:

@@ -119,6 +119,7 @@ class QdrantService(BaseVectorStore):
                     )
                 )
             qdrant_filter = Filter(must=conditions)
+        info = self.client.get_collection(self.collection_name)
 
         results = self.client.query_points(
             collection_name=self.collection_name,
@@ -126,6 +127,16 @@ class QdrantService(BaseVectorStore):
             limit=top_k,
             query_filter=qdrant_filter,
         )
+
+        print("=" * 80)
+        print("[QDRANT SEARCH]")
+        print(f"Collection = {self.collection_name}")
+        print(f"Returned Points = {len(results.points)}")
+
+        for point in results.points[:5]:
+            print(f"Score = {point.score}")
+
+        print("=" * 80)
 
         return results.points
 
@@ -150,6 +161,13 @@ class QdrantService(BaseVectorStore):
         """
         try:
             info = self.client.get_collection(self.collection_name)
+
+            print("=" * 80)
+            print("[QDRANT HEALTH]")
+            print(f"Collection = {self.collection_name}")
+            print(f"Points Count = {info.points_count}")
+            print("=" * 80)
+
             return {
                 "status": "healthy",
                 "collection": self.collection_name,
@@ -161,8 +179,8 @@ class QdrantService(BaseVectorStore):
                 "error": str(e)
             }
 
-service = QdrantService()
-print(service.health_check())
+    service = QdrantService()
+    print(service.health_check())
 
 if __name__ == "__main__":
     from settings import settings

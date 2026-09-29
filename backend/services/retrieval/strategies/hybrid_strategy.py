@@ -82,6 +82,11 @@ class HybridStrategy(BaseRetrievalStrategy):
             time.perf_counter() - start
         ) * 1000
 
+        print(
+            f"[DEBUG] Dense Retrieval -> "
+            f"{len(dense_response.documents)} docs"
+        )
+
         # -------------------------------
         # Sparse Retrieval
         # -------------------------------
@@ -95,7 +100,10 @@ class HybridStrategy(BaseRetrievalStrategy):
         metrics.sparse_retrieval_ms = (
             time.perf_counter() - start
         ) * 1000
-
+        print(
+            f"[DEBUG] Sparse Retrieval -> "
+            f"{len(sparse_response.documents)} docs"
+        )
         # -------------------------------
         # Fusion
         # -------------------------------
@@ -110,6 +118,11 @@ class HybridStrategy(BaseRetrievalStrategy):
         metrics.fusion_ms = (
             time.perf_counter() - start
         ) * 1000
+
+        print(
+            f"[DEBUG] Fusion -> "
+            f"{len(fused_documents)} docs"
+        )
 
         # -------------------------------
         # Metadata Filter
@@ -126,6 +139,11 @@ class HybridStrategy(BaseRetrievalStrategy):
             time.perf_counter() - start
         ) * 1000
 
+        print(
+            f"[DEBUG] Metadata Filter -> "
+            f"{len(filtered_documents)} docs"
+        )
+
         # -------------------------------
         # Reranker
         # -------------------------------
@@ -138,6 +156,16 @@ class HybridStrategy(BaseRetrievalStrategy):
             # top_k passed from request; strictly caps chunks sent to LLM (token cost control)
             top_k=request.top_k,
         )
+
+        print(
+            f"[DEBUG] Reranker -> "
+            f"{len(reranked_documents)} docs"
+        )
+
+        for doc in reranked_documents:
+            print(
+                f"[DEBUG] Score={doc.score:.4f}"
+            )
 
         metrics.reranking_ms = (
             time.perf_counter() - start
@@ -184,6 +212,11 @@ class HybridStrategy(BaseRetrievalStrategy):
             retriever_name="HybridStrategy",
             metrics=metrics,
             sources=sources,
+        )
+
+        print(
+            f"[DEBUG] Final Context Length = "
+            f"{len(context)}"
         )
 
         return response, context
