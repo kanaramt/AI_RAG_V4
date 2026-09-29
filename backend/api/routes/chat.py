@@ -585,6 +585,7 @@ async def post_message(
             generation_engine = GenerationEngine()
 
             model_name = data.model
+            rewrite_start = time.time()
             print(f"[DEBUG] About to call LLM with model={model_name}")
 
             rewritten = await generation_engine.generate(
@@ -593,9 +594,17 @@ async def post_message(
                 temperature=0.0
             )
 
-            print("[DEBUG] LLM call completed successfully")
+            print(
+                f"[PERF] Query Rewrite Time = "
+                f"{time.time() - rewrite_start:.2f} sec"
+            )
+
             rewritten_query = rewritten.strip()
             print(f"[Query Rewriter] Rewrote '{query}' -> '{rewritten_query}'")
+            print(
+                f"[PERF] Query Rewrite Time = "
+                f"{time.time() - rewrite_start:.2f} sec"
+            )
         except Exception as e:
             print(f"[Query Rewriter] Error rewriting query: {e}")
     num_docs = 0
