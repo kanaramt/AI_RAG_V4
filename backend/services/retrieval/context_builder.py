@@ -32,10 +32,11 @@ class ContextBuilder:
             contexts.append(document.text)
 
         merged_context = "\n\n".join(contexts)
-
-        compressed_context = await self.compressor.compress(
+        #Commented out for fixes and delays by RAG App and multiple uneccessary calls.
+        """compressed_context = await self.compressor.compress(
             query=query,
             context=merged_context,
         )
 
-        return compressed_context
+        return compressed_context"""
+        return merged_context

@@ -31,7 +31,7 @@ class Settings(BaseSettings):
 
     # Retrieval
     VECTOR_STORE: str = "hybrid"
-    RETRIEVAL_STRATEGY: str = "multi_query"
+    RETRIEVAL_STRATEGY: str = "hybrid"
     RERANKER_MODEL: str = "BAAI/bge-reranker-base"
 
     # Local Models
