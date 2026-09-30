@@ -104,6 +104,7 @@ async def read_website():
 
 @app.get("/health")
 async def health():
+    print("HEALTH ENDPOINT HIT")
     return {
         "status": "healthy"
     }

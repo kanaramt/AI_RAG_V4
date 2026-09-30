@@ -41,6 +41,7 @@ async def auto_sync_watcher(memory: MemoryService, interval_seconds: float = 10.
     """
     safe_print(f"[KnowledgeBaseWatcher] Background watcher started (scanning backend/data/ every {interval_seconds}s)...")
     while True:
+        safe_print("[KnowledgeBaseWatcher] Scan cycle started")
         try:
             await KnowledgeBaseLoader.sync_knowledge_base(memory)
         except asyncio.CancelledError:
@@ -151,30 +152,24 @@ async def lifespan(
         except Exception as e:
             safe_print(f"[Lifespan] Initial Knowledge Base sync error: {e}")
 
-    # Launch background auto-sync watcher loop (includes initial sync above)
-    initial_sync_task = asyncio.create_task(_initial_kb_sync()) 
-    #watcher_task = asyncio.create_task(auto_sync_watcher(memory, interval_seconds=10.0))
-    #Temporary disabling watcher since render goes out of memory. Enable it later as requirement.
-    watcher_task = None
-    
+    # Launch background auto-sync. Use a long interval on Render (512MB) —
+    # 10s scanning caused OOM; 300s is safe for autosync without constant embedding.
+    initial_sync_task = asyncio.create_task(_initial_kb_sync())
+    watcher_task = asyncio.create_task(
+        auto_sync_watcher(memory, interval_seconds=300.0)
+    )
+
     # Server is now ready — yield immediately so port 8000 opens without delay
     yield
 
     # Shutdown hooks
-    #initial_sync_task.cancel() # disabling currently, enable it later.
     try:
         initial_sync_task.cancel()
-    except:
+    except Exception:
         pass
-    """watcher_task.cancel()
-    try:
-        await watcher_task
-    except asyncio.CancelledError:
-        pass""" ## temporary disabling, while enabling this disable the below same refernce code. 
 
     if watcher_task:
         watcher_task.cancel()
-
         try:
             await watcher_task
         except asyncio.CancelledError:
