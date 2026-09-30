@@ -667,10 +667,20 @@ async def post_message(
 
             emb_start = time.time()
 
-            _emb_preview = EmbeddingService(
+            print("[EMBED TEST] Creating EmbeddingService")
+
+            svc = EmbeddingService(
                 model_name=_active_emb,
                 api_key=_embedding_key,
-            ).generate_embedding(query)
+            )
+
+            print("[EMBED TEST] Service Created")
+
+            _emb_preview = svc.generate_embedding(query)
+
+            print("[EMBED TEST] Embedding Generated")
+
+            print(len(_emb_preview))
 
             print(
                 f"[PERF] Embedding Preview Time = "
