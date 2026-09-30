@@ -46,6 +46,8 @@ class HybridStrategy(BaseRetrievalStrategy):
         request: RetrievalRequest,
     ) -> tuple[RetrievalResponse, str]:
 
+        print("[HYBRID STRATEGY] START")
+
         metrics = RetrievalMetrics()
 
         pipeline_start = time.perf_counter()
