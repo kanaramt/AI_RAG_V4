@@ -27,6 +27,14 @@ class QueryRewriter:
         return self._llm
 
     async def rewrite(self, query: str) -> str:
+
+        print("[QUERY REWRITER] START")
+
+        if not self.llm:
+            print("[QUERY REWRITER] NO LLM")
+            return query
+
+        print("[QUERY REWRITER] BEFORE CHAT")
         """
         Rewrite a user query for better semantic retrieval.
         """
@@ -47,9 +55,14 @@ Query:
 """
 
         try:
+            print("[QUERY REWRITER] BEFORE CHAT")
+
             response = await self.llm.chat(
                 [{"role": "user", "content": prompt}]
             )
+
+            print("[QUERY REWRITER] AFTER CHAT")
+
             return response.strip() if response else query
 
         except Exception as e:
