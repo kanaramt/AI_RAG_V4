@@ -87,6 +87,14 @@ class QdrantService(BaseVectorStore):
                 )
             )
 
+            print("=" * 80)
+            print("[QDRANT WRITE DEBUG]")
+            print(f"Collection = {self.collection_name}")
+            print(f"Documents = {len(documents)}")
+            print(f"Embeddings = {len(embeddings)}")
+            print(f"Points = {len(points)}")
+            print("=" * 80)
+
         # Batch upsert points to Qdrant to prevent gRPC payload size limitations and memory overflows
         for i in range(0, len(points), batch_size):
             batch = points[i : i + batch_size]

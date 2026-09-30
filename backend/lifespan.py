@@ -152,7 +152,7 @@ async def lifespan(
             safe_print(f"[Lifespan] Initial Knowledge Base sync error: {e}")
 
     # Launch background auto-sync watcher loop (includes initial sync above)
-    # initial_sync_task = asyncio.create_task(_initial_kb_sync()) #disabling currently, enable it later
+    initial_sync_task = asyncio.create_task(_initial_kb_sync()) 
     #watcher_task = asyncio.create_task(auto_sync_watcher(memory, interval_seconds=10.0))
     #Temporary disabling watcher since render goes out of memory. Enable it later as requirement.
     watcher_task = None
@@ -161,7 +161,11 @@ async def lifespan(
     yield
 
     # Shutdown hooks
-    #initial_sync_task.cancel() # disabling currently, enable it later
+    #initial_sync_task.cancel() # disabling currently, enable it later.
+    try:
+        initial_sync_task.cancel()
+    except:
+        pass
     """watcher_task.cancel()
     try:
         await watcher_task

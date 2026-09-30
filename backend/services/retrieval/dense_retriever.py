@@ -69,6 +69,11 @@ class DenseRetriever(BaseRetriever):
         else:
             embedding_service = self.embedding_service
 
+            print("=" * 80)
+            print("RETRIEVAL MODEL =", embedding_service.model)
+            print("DIMENSION =", embedding_service.dimension)
+            print("=" * 80)
+
         query_embedding = embedding_service.generate_embedding(
             request.query
         )
