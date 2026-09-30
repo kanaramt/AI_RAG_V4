@@ -694,8 +694,13 @@ async def post_message(
         })
 
         retrieval_start = time.time()
+        print("[CHAT] BEFORE RETRIEVAL")
+        try:
+            response_retrieval, context_str = await retrieval_service.retrieve(req)
 
-        response_retrieval, context_str = await retrieval_service.retrieve(req)
+        except Exception as e:
+            print(f"[Retrieval Error] Failed to retrieve context: {e}")
+            response_retrieval, context_str = None, None
 
         print(
             f"[PERF] Retrieval Time = "
