@@ -300,8 +300,16 @@ async def post_message(
 
     print(f"[CHAT FOUND] {chat is not None}")
 
+    # After Render OOM/restart or Neon truncate, browser may keep a stale chat_id.
+    # Recreate the conversation so POST /messages does not 404.
     if not chat:
-        raise HTTPException(status_code=404, detail="Chat not found")
+        title = (data.text or "Untitled Chat")[:24]
+        if data.text and len(data.text) > 24:
+            title += "..."
+        print(f"[CHAT MESSAGE] recreating missing chat {chat_id}")
+        chat = memory.create_conversation(chat_id, title or "Untitled Chat", data.model)
+        if not chat:
+            raise HTTPException(status_code=404, detail="Chat not found")
 
     history = memory.get_messages(chat_id)
     query = data.text
@@ -637,9 +645,12 @@ async def post_message(
             "detail": f"Rewrote query to: '{rewritten_query}'",
             "status": "done"
         })
-
+        
+        print("[CHAT] BEFORE EMBEDDING PREVIEW")
         # Embedding preview
         try:
+            print("[CHAT] INSIDE EMBEDDING PREVIEW")
+            print(embedding_model)
             import os as _os
             from services.embedding_service import EmbeddingService
             _active_emb = (
