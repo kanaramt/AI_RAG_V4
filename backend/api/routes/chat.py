@@ -693,8 +693,8 @@ async def post_message(
                 "detail": f"Query converted to {emb_dims}-dim vector embedding.",
                 "status": "done"
             })
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[EMBEDDING PREVIEW ERROR] {type(e).__name__}: {e}")
 
         pipeline_trace.append({
             "step": 4,
