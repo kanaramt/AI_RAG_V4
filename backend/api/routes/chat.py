@@ -648,7 +648,9 @@ async def post_message(
         
         print("[CHAT] BEFORE EMBEDDING PREVIEW")
         # Embedding preview
-        try:
+        print("[CHAT] EMBEDDING PREVIEW DISABLED")
+        #Enable embedding by removing quotes.
+        """try:
             print("[CHAT] INSIDE EMBEDDING PREVIEW")
             print(embedding_model)
             import os as _os
@@ -694,7 +696,7 @@ async def post_message(
                 "status": "done"
             })
         except Exception as e:
-            print(f"[EMBEDDING PREVIEW ERROR] {type(e).__name__}: {e}")
+            print(f"[EMBEDDING PREVIEW ERROR] {type(e).__name__}: {e}")"""
 
         pipeline_trace.append({
             "step": 4,
@@ -705,6 +707,9 @@ async def post_message(
 
         retrieval_start = time.time()
         print("[CHAT] BEFORE RETRIEVAL")
+        import os
+        print("Active model (env):", os.getenv("ACTIVE_EMBEDDING_MODEL"))
+        print("Active model (cfg):", getattr(data, "active_model", "not set"))
         try:
             response_retrieval, context_str = await retrieval_service.retrieve(req)
 
