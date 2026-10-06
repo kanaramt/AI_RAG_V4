@@ -150,6 +150,9 @@ class LLMFactory:
 
         if provider == "openai":
             api_key = _get_env_key("OPENAI_API_KEY")
+            print(f"[DEBUG OPENAI KEY LENGTH] {len(api_key) if api_key else 0}")
+            print(f"[DEBUG OPENAI KEY PREFIX] {api_key[:10] if api_key else 'NONE'}")
+            print(f"[DEBUG OPENAI KEY SUFFIX] {api_key[-4:] if api_key else 'NONE'}")
             if not api_key:
                 raise ValueError(
                     "⚠️ OpenAI API Key is missing. "
