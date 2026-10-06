@@ -7,6 +7,7 @@ class ActiveEmbeddingSettingRepository:
 
     @classmethod
     def get_active_model(cls) -> str | None:
+        print("[ACTIVE EMB] get_active_model START")
         db = SessionLocal()
         try:
             row = (
@@ -16,9 +17,11 @@ class ActiveEmbeddingSettingRepository:
                 )
                 .first()
             )
+            print("[ACTIVE EMB] DB QUERY DONE")
             return row.model_id if row else None
         finally:
             db.close()
+            print("[ACTIVE EMB] DB CLOSED")
 
     @classmethod
     def save_active_model(cls, model_id: str) -> None:
