@@ -663,10 +663,15 @@ async def post_message(
             print(embedding_model)
             import os as _os
             from services.embedding_service import EmbeddingService
+            v3 = ActiveEmbeddingSettingRepository.get_active_model()
+
+            print("[DEBUG AFTER GET_ACTIVE_MODEL]")
+            print(v3)
+
             _active_emb = (
                 data.settings.get("embedding_model")
                 or data.settings.get("embeddingModel")
-                or ActiveEmbeddingSettingRepository.get_active_model()
+                or v3
                 or _os.getenv("ACTIVE_EMBEDDING_MODEL")
             )
 
