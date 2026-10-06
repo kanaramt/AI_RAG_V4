@@ -1,3 +1,4 @@
+from uuid import uuid4
 from services.retrieval import retrieval_service
 import time
 import re
@@ -242,7 +243,6 @@ async def create_chat(data: ChatCreateSchema, memory = Depends(get_memory)):
 
 @router.post("")
 async def create_chat(data: ChatCreateSchema, memory = Depends(get_memory)):
-    from uuid import uuid4
 
     chat_id = f"chat-{int(time.time() * 1000)}-{uuid4().hex[:6]}"
 
@@ -1071,7 +1071,7 @@ async def post_message(
             api_key=embedding_api_key,
         ).generate_embedding(dialogue_content)
 
-        from uuid import uuid4
+        
         dialogue_id = str(uuid4())
 
         qdrant_memory.add_documents(
@@ -1104,7 +1104,6 @@ async def post_message(
 
         # Also persist to PostgreSQL evaluation_results table (visible in PGAdmin)
         try:
-            from uuid import uuid4
             from database.session import SessionLocal
             from services.evaluation.evaluation_sql_repository import EvaluationSQLRepository
             from schemas.evaluation.evaluation_result import EvaluationResult
