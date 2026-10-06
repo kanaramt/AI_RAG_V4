@@ -2,6 +2,7 @@ import traceback
 import json
 import os
 import time
+import asyncio
 from database.session import SessionLocal
 from services.document_management.document_sql_repository import DocumentSQLRepository
 from engines.generation.generation_engine import GenerationEngine
@@ -9,6 +10,41 @@ from settings import settings
 
 class KBMetadataService:
     METADATA_FILE = os.path.join(os.path.dirname(__file__), "..", "..", "data", "kb_metadata.json")
+    _rebuild_lock = asyncio.Lock()
+    _rebuild_pending = False
+    _last_rebuild_at = 0.0
+    # Coalesce rapid ingest-triggered rebuilds (avoids RAM storm on Render 512MB)
+    MIN_REBUILD_INTERVAL_SEC = 60.0
+
+    @classmethod
+    def schedule_rebuild(cls) -> None:
+        """Debounced rebuild: at most one concurrent run; skip if rebuilt recently."""
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return
+        loop.create_task(cls._debounced_rebuild())
+
+    @classmethod
+    async def _debounced_rebuild(cls) -> None:
+        now = time.time()
+        if cls._rebuild_lock.locked():
+            cls._rebuild_pending = True
+            return
+        if (now - cls._last_rebuild_at) < cls.MIN_REBUILD_INTERVAL_SEC:
+            cls._rebuild_pending = True
+            return
+        async with cls._rebuild_lock:
+            try:
+                await cls.rebuild_metadata()
+                cls._last_rebuild_at = time.time()
+            finally:
+                if cls._rebuild_pending:
+                    cls._rebuild_pending = False
+                    # One follow-up after the cooldown window
+                    await asyncio.sleep(cls.MIN_REBUILD_INTERVAL_SEC)
+                    await cls.rebuild_metadata()
+                    cls._last_rebuild_at = time.time()
 
     @classmethod
     def get_metadata(cls) -> dict:
@@ -23,7 +59,6 @@ class KBMetadataService:
                 print(f"[KBMetadataService] Error reading metadata file: {e}")
 
         # Build metadata synchronously if file does not exist (using event loop if already running)
-        import asyncio
         try:
             loop = asyncio.get_event_loop()
         except RuntimeError:
@@ -41,7 +76,7 @@ class KBMetadataService:
                 "document_count": 0,
                 "last_indexed_timestamp": time.time()
             }
-            asyncio.create_task(cls.rebuild_metadata())
+            cls.schedule_rebuild()
             return metadata
         else:
             return loop.run_until_complete(cls.rebuild_metadata())
@@ -81,9 +116,11 @@ class KBMetadataService:
                 if cat:
                     categories_set.add(str(cat))
 
+        # Only sample short excerpts — avoid holding full document bodies for LLM prompt
         doc_samples = []
-        for doc in docs[:10]:
-            doc_samples.append(f"Title: {doc.title}\nExcerpt: {doc.content[:250]}")
+        for doc in docs[:5]:
+            excerpt = (doc.content or "")[:200]
+            doc_samples.append(f"Title: {doc.title}\nExcerpt: {excerpt}")
 
         samples_text = "\n\n".join(doc_samples)
         prompt = f"""
@@ -116,7 +153,14 @@ Provide a JSON object with exactly the following fields (nothing else, no format
         major_themes = top_cats if top_cats else ["Knowledge Repository", "Technical Documentation"]
 
         try:
-            model_name = os.getenv("DEFAULT_CLOUD_MODEL") or os.getenv("LLM_MODEL")
+            # Prefer env, then Settings defaults (gpt-4o) — fixes model=None on Render
+            model_name = (
+                os.getenv("DEFAULT_CLOUD_MODEL")
+                or os.getenv("LLM_MODEL")
+                or getattr(settings, "LLM_MODEL", None)
+                or getattr(settings, "DEFAULT_MODEL", None)
+                or "gpt-4o"
+            )
             print(f"[KBMetadataService] Attempting LLM analysis with model={model_name}")
 
             engine = GenerationEngine()

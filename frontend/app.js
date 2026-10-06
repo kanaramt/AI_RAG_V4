@@ -3704,6 +3704,17 @@ async function sendMessage() {
         if (!response.ok) {
             const errData = await response.json().catch(() => ({}));
             const errDetail = errData.detail || errData.message || `Server Error (${response.status})`;
+
+            // Clear stale local chat pointer after Render restart / Neon truncate
+            if (response.status === 404 && String(errDetail).toLowerCase().includes('chat not found')) {
+                state.activeChatId = null;
+                localStorage.removeItem('antigravity_rag_active_id');
+                if (chat && chat.id) {
+                    state.chats = state.chats.filter(c => c.id !== chat.id);
+                }
+                renderRecentChatsList();
+            }
+
             renderMessageBubble({
                 sender: 'assistant',
                 text: `⚠️ **Failed to receive model response**\n\n*Details:* ${errDetail}\n\nPlease check if your selected model (${state.selectedModel}) is available or if backend services are running.`,

@@ -53,6 +53,20 @@ class Settings(BaseSettings):
     QDRANT_URL: str = ""
     QDRANT_API_KEY: str = ""
 
+    # Upstash Redis
+    UPSTASH_REDIS_REST_URL: str = ""
+    UPSTASH_REDIS_REST_TOKEN: str = ""
+
+    # Reranker APIs
+    JINA_API_KEY: str = ""
+    COHERE_API_KEY: str = ""
+    ACTIVE_RERANKER_PROVIDER: str = "local"
+
+    # OCR Config
+    ACTIVE_OCR_PROVIDER: str = "easyocr"
+    AZURE_DOCUMENT_INTELLIGENCE_KEY: str = ""
+    AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT: str = ""
+
     @property
     def BACKEND_DIR(self) -> Path:
         return BACKEND_DIR

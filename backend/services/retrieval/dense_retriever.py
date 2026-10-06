@@ -74,9 +74,13 @@ class DenseRetriever(BaseRetriever):
             print("DIMENSION =", embedding_service.dimension)
             print("=" * 80)
 
+        print("[DEBUG] About to generate embedding")
+
         query_embedding = embedding_service.generate_embedding(
             request.query
-        )
+        )       
+
+        print("[DEBUG] Embedding generated")
 
         results = self.vector_store.search_dense(
             query_embedding=query_embedding,

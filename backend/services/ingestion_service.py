@@ -167,7 +167,7 @@ class IngestionService:
         # Rebuild KB Metadata Summary
         from services.kb_metadata_service import KBMetadataService
         import asyncio
-        asyncio.create_task(KBMetadataService.rebuild_metadata())
+        KBMetadataService.schedule_rebuild()
 
         return {
             "id": doc_id,
@@ -387,7 +387,7 @@ class IngestionService:
         # Rebuild KB Metadata Summary
         from services.kb_metadata_service import KBMetadataService
         import asyncio
-        asyncio.create_task(KBMetadataService.rebuild_metadata())
+        KBMetadataService.schedule_rebuild()
 
         print(f"[IngestionService] Successfully ingested '{file_path.name}' -> {len(chunks)} chunks indexed.")
         return {
@@ -489,7 +489,7 @@ class IngestionService:
 
         # Rebuild KB Metadata Summary
         from services.kb_metadata_service import KBMetadataService
-        asyncio.create_task(KBMetadataService.rebuild_metadata())
+        KBMetadataService.schedule_rebuild()
 
         elapsed_ms = round((time.time() - start_time) * 1000, 2)
         print(f"[IngestionService] Successfully ingested Webpage '{page_title}' ({url}) -> {len(doc_chunks)} chunks in {elapsed_ms}ms")
@@ -573,7 +573,7 @@ class IngestionService:
 
             # Rebuild KB Metadata Summary
             from services.kb_metadata_service import KBMetadataService
-            asyncio.create_task(KBMetadataService.rebuild_metadata())
+            KBMetadataService.schedule_rebuild()
 
             return True
         except Exception as e:

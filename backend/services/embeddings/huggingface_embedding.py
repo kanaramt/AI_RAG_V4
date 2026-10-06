@@ -13,13 +13,8 @@ class HuggingFaceEmbedding(BaseEmbedding):
     @property
     def model(self):
         if self._model is None:
-            # pyrefly: ignore [missing-import]
-            from sentence_transformers import SentenceTransformer
-
-            self._model = SentenceTransformer(
-                self.model_name,
-                device="cpu",
-            )
+            from core.model_cache import ModelCache
+            self._model = ModelCache.get_sentence_transformer(self.model_name)
         return self._model
 
     def generate_embedding(self, text: str) -> list[float]:

@@ -148,7 +148,7 @@ async def delete_document(doc_id: str, memory = Depends(get_memory)):
     try:
         from services.kb_metadata_service import KBMetadataService
         import asyncio
-        asyncio.create_task(KBMetadataService.rebuild_metadata())
+        KBMetadataService.schedule_rebuild()
     except Exception as e:
         print(f"Error scheduling KB metadata rebuild: {e}")
 
@@ -253,7 +253,7 @@ async def delete_all_documents(
     try:
         from services.kb_metadata_service import KBMetadataService
         import asyncio
-        asyncio.create_task(KBMetadataService.rebuild_metadata())
+        KBMetadataService.schedule_rebuild()
     except Exception as e:
         print(f"Error scheduling KB metadata rebuild: {e}")
 

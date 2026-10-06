@@ -28,14 +28,11 @@ class HybridStrategy(BaseRetrievalStrategy):
         self.query_rewriter = QueryRewriter()
 
         self.dense = DenseRetriever()
-
-        self.sparse = SparseRetriever()
-
-        self.fusion = ScoreFusion()
-
+        
         self.metadata_filter = MetadataFilter()
 
-        self.reranker = Reranker()
+        from services.rerankers.factory import RerankerFactory
+        self.reranker = RerankerFactory.create()
 
         self.context_builder = ContextBuilder()
 
@@ -90,41 +87,11 @@ class HybridStrategy(BaseRetrievalStrategy):
         )
 
         # -------------------------------
-        # Sparse Retrieval
+        # Fusion bypass (Sparse is no-op)
         # -------------------------------
-
-        start = time.perf_counter()
-
-        sparse_response = self.sparse.retrieve(
-            retrieval_request
-        )
-
-        metrics.sparse_retrieval_ms = (
-            time.perf_counter() - start
-        ) * 1000
-        print(
-            f"[DEBUG] Sparse Retrieval -> "
-            f"{len(sparse_response.documents)} docs"
-        )
-        # -------------------------------
-        # Fusion
-        # -------------------------------
-
-        start = time.perf_counter()
-
-        fused_documents = self.fusion.fuse(
-            dense_response.documents,
-            sparse_response.documents,
-        )
-
-        metrics.fusion_ms = (
-            time.perf_counter() - start
-        ) * 1000
-
-        print(
-            f"[DEBUG] Fusion -> "
-            f"{len(fused_documents)} docs"
-        )
+        fused_documents = dense_response.documents
+        metrics.sparse_retrieval_ms = 0
+        metrics.fusion_ms = 0
 
         # -------------------------------
         # Metadata Filter

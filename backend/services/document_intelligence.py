@@ -51,9 +51,8 @@ class DocumentIntelligence:
     @classmethod
     def get_reader(cls):
         if cls._reader is None:
-            import easyocr
-            print("Initializing EasyOCR Reader (gpu=False)...")
-            cls._reader = easyocr.Reader(["en"], gpu=False)
+            from services.ocr.factory import OCRFactory
+            cls._reader = OCRFactory.create()
         return cls._reader
 
     @classmethod
@@ -69,14 +68,13 @@ class DocumentIntelligence:
         """
         Extract text from an image using OCR.
         """
+        import cv2
+        img = cv2.imread(image_path)
+        if img is None:
+            return ""
+            
         reader = cls.get_reader()
-        results = reader.readtext(image_path)
-
-        extracted_text = " ".join(
-            text for _, text, _ in results
-        )
-
-        return extracted_text.strip()
+        return reader.extract_text(img)
         
     @classmethod
     async def extract_text(
@@ -110,14 +108,9 @@ class DocumentIntelligence:
                     detail=f"Could not decode image: {file.filename}"
                 )
 
-            # Perform EasyOCR extraction
+            # Perform extraction
             reader = cls.get_reader()
-            results = reader.readtext(img)
-            extracted_text = " ".join(
-                text for _, text, _ in results
-            )
-
-            return extracted_text.strip()
+            return reader.extract_text(img)
 
         raise HTTPException(
             status_code=400,

@@ -58,6 +58,9 @@ class MemoryService:
         except Exception as e:
             print(f"Warning: could not set WAL mode on SQLite: {e}")
         self.create_tables()
+        
+        from services.cache.redis_cache import UpstashRedisCache
+        self.cache = UpstashRedisCache()
 
 
     def create_tables(self):

@@ -314,6 +314,15 @@ async def post_message(
     history = memory.get_messages(chat_id)
     query = data.text
 
+    # Redis Cache Lookup
+    from services.cache.redis_cache import UpstashRedisCache
+    cache = UpstashRedisCache()
+    cache_key = f"chat_cache:{chat_id}:{query}"
+    cached_response = cache.get(cache_key)
+    if cached_response:
+        print("[CACHE] Returning cached response")
+        return cached_response
+
     # Pipeline trace — collects each processing step for the frontend panel
     pipeline_trace = []
     # 1. Query Classification (Rule-based to prevent semantic latency/errors)
@@ -648,9 +657,8 @@ async def post_message(
         
         print("[CHAT] BEFORE EMBEDDING PREVIEW")
         # Embedding preview
-        print("[CHAT] EMBEDDING PREVIEW DISABLED")
-        #Enable embedding by removing quotes.
-        """try:
+        
+        try:
             print("[CHAT] INSIDE EMBEDDING PREVIEW")
             print(embedding_model)
             import os as _os
@@ -696,7 +704,7 @@ async def post_message(
                 "status": "done"
             })
         except Exception as e:
-            print(f"[EMBEDDING PREVIEW ERROR] {type(e).__name__}: {e}")"""
+            print(f"[EMBEDDING PREVIEW ERROR] {type(e).__name__}: {e}")
 
         pipeline_trace.append({
             "step": 4,
@@ -1290,6 +1298,12 @@ async def post_message(
         assistant_msg["interaction_id"] = dataset_record["interaction_id"]
     except Exception as ds_err:
         print(f"[Dataset Logging Error]: {ds_err}")
+
+    # Save to Redis Cache (1 hour TTL)
+    try:
+        cache.set(cache_key, assistant_msg, ttl=3600)
+    except Exception as e:
+        print(f"[CACHE] Error saving to cache: {e}")
 
     return assistant_msg
 

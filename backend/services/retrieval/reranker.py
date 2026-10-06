@@ -14,8 +14,8 @@ class Reranker:
     def model(self):
         if self._model is None:
             print(f"[LazyLoad] Initializing CrossEncoder reranker ({settings.RERANKER_MODEL})...")
-            from sentence_transformers import CrossEncoder
-            self._model = CrossEncoder(settings.RERANKER_MODEL)
+            from core.model_cache import ModelCache
+            self._model = ModelCache.get_cross_encoder(settings.RERANKER_MODEL)
         return self._model
 
     def rerank(
