@@ -674,11 +674,15 @@ async def post_message(
                 or v3
                 or _os.getenv("ACTIVE_EMBEDDING_MODEL")
             )
+            print("[EMBED TEST] ACTIVE MODEL =", _active_emb)
+            print("[EMBED TEST] AFTER ACTIVE MODEL")
 
             _embedding_key = (
                 data.settings.get("embedding_api_key")
                 or data.settings.get("embeddingApiKey")
             )
+
+            print("[EMBED TEST] API KEY =", _embedding_key)
 
             emb_start = time.time()
 
