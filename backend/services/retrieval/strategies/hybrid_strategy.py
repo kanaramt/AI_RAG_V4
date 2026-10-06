@@ -54,10 +54,12 @@ class HybridStrategy(BaseRetrievalStrategy):
         # -------------------------------
 
         start = time.perf_counter()
-
+        print("[HYBRID] BEFORE QUERY REWRITE")
         rewritten_query = await self.query_rewriter.rewrite(
             request.query
         )
+
+        print("[HYBRID] AFTER QUERY REWRITE")
 
         metrics.query_rewrite_ms = (
             time.perf_counter() - start
@@ -72,10 +74,12 @@ class HybridStrategy(BaseRetrievalStrategy):
         # -------------------------------
 
         start = time.perf_counter()
-
+        print("[HYBRID] BEFORE DENSE")
         dense_response = self.dense.retrieve(
             retrieval_request
         )
+
+        print("[HYBRID] AFTER DENSE")
 
         metrics.dense_retrieval_ms = (
             time.perf_counter() - start
@@ -98,11 +102,13 @@ class HybridStrategy(BaseRetrievalStrategy):
         # -------------------------------
 
         start = time.perf_counter()
-
+        print("[HYBRID] BEFORE METADATA FILTER")
         filtered_documents = self.metadata_filter.filter(
             fused_documents,
             request.filters,
         )
+
+        print("[HYBRID] AFTER METADATA FILTER")
 
         metrics.metadata_filter_ms = (
             time.perf_counter() - start
@@ -118,13 +124,15 @@ class HybridStrategy(BaseRetrievalStrategy):
         # -------------------------------
 
         start = time.perf_counter()
-
+        print("[HYBRID] BEFORE RERANKER")
         reranked_documents = self.reranker.rerank(
             request.query,
             filtered_documents,
             # top_k passed from request; strictly caps chunks sent to LLM (token cost control)
             top_k=request.top_k,
         )
+
+        print("[HYBRID] AFTER RERANKER")
 
         print(
             f"[DEBUG] Reranker -> "
@@ -145,11 +153,13 @@ class HybridStrategy(BaseRetrievalStrategy):
         # -------------------------------
 
         start = time.perf_counter()
-
+        print("[HYBRID] BEFORE CONTEXT BUILDER")
         context = await self.context_builder.build(
             query=request.query,
             documents=reranked_documents,
         )
+
+        print("[HYBRID] AFTER CONTEXT BUILDER")
 
         elapsed = (
             time.perf_counter() - start
